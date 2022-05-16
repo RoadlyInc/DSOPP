@@ -1,0 +1,18 @@
+syntax = "proto3";
+package dsopp.sensors.calibration.proto;
+import "semantic_legend.proto";
+
+message CameraSettings {
+  repeated double intrinsics = 1;
+  repeated double photometric = 2;
+  bytes vignetting = 3;
+  bytes camera_mask = 4;
+  enum ModelType {
+    PINHOLE = 0;
+    SIMPLE_RADIAL = 1;
+  }
+  ModelType model_type = 5;
+  repeated double image_size = 6;
+  double shutter_time = 7;
+  SemanticLegend semantic_legend = 8;
+}

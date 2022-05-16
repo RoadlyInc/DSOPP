@@ -1,0 +1,7 @@
+syntax = "proto3";
+package dsopp.track.proto;
+import "sanity_check_status.proto";
+
+message SanityCheckResults{
+  map<uint64, SanityCheckStatus> sanity_check_results = 1;
+}

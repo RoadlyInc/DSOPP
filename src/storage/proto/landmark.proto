@@ -1,0 +1,13 @@
+syntax = "proto3";
+package dsopp.track.proto;
+message Landmark {
+  double projection_x = 1;
+  double projection_y = 2;
+  double direction_x = 3;
+  double direction_y = 4;
+  double direction_z = 5;
+  double idepth = 6;
+  double idepth_variance = 9;
+  double relative_baseline = 7;
+  uint64 semantic_type_id = 8;
+}

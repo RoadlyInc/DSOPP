@@ -1,0 +1,8 @@
+syntax = "proto3";
+package dsopp.track.proto;
+import "frame.proto";
+import "connection.proto";
+message OdometryTrack {
+  repeated Keyframe frames = 1;
+  Connections connections = 2;
+}

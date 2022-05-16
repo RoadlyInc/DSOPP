@@ -1,0 +1,7 @@
+syntax = "proto3";
+package dsopp.sensors.proto;
+import "camera_settings.proto";
+
+message AgentSettings {
+  map<uint64, dsopp.sensors.calibration.proto.CameraSettings> camera_settings = 1;
+}

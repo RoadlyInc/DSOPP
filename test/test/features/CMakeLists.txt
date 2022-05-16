@@ -1,0 +1,3 @@
+dsopp_add_test(
+  test_tracking_features_extractor test_tracking_features_extractor.cpp
+  features sensors camera_providers camera_calibration)

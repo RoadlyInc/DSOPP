@@ -1,0 +1,10 @@
+syntax = "proto3";
+package dsopp.track.proto;
+
+enum SanityCheckStatus {
+  kExceededGravityAngle = 0;
+  kExceededGravityAngularVelocity = 1;
+  kExceededRotationAngle = 2;
+  kExceededRotationAngularVelocity = 3;
+  kExceededTranslationError = 4;
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package dsopp.track.proto;
+message Transformation {
+  repeated double data = 1;
+}
+message ECEFPoses {
+  repeated double t_earth_local = 1;
+  repeated Transformation t_local_keyframes = 2;
+}

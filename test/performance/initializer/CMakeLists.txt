@@ -1,0 +1,13 @@
+add_executable(calculate_monocular_initializer_deviations
+               calculate_monocular_initializer_deviations.cpp)
+target_link_libraries(
+  calculate_monocular_initializer_deviations
+  tracker
+  features
+  sensors
+  test_tools
+  sophus
+  ceres
+  feature_based_slam_tracker
+  tracker_landmarks_activator
+  settings)

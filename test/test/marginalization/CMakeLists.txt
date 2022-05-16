@@ -1,0 +1,9 @@
+dsopp_add_test_and_coverage(
+  test_marginalization
+  test_marginalization.cpp
+  track
+  marginalization
+  time
+  gmock
+  gmock_main
+  settings)

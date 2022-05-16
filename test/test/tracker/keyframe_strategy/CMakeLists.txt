@@ -1,0 +1,10 @@
+dsopp_add_test_and_coverage(
+  test_frequency_keyframe_strategy
+  test_frequency_keyframe_strategy.cpp
+  gmock
+  gmock_main
+  tracker
+  sophus
+  tracker_keyframe_strategy
+  track
+  settings)

@@ -1,0 +1,14 @@
+syntax = "proto3";
+package dsopp.track.proto;
+
+message Connection {
+  uint32 reference_keyframe_id = 1;
+  uint32 reference_sensor_id = 2;
+  uint32 target_keyframe_id = 3;
+  uint32 target_sensor_id = 4;
+  repeated double covariance = 5;
+}
+
+message Connections {
+  repeated Connection connections = 1;
+}

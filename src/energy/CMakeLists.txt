@@ -1,0 +1,6 @@
+add_subdirectory(motion)
+add_subdirectory(camera_model)
+add_subdirectory(projector)
+add_subdirectory(epipolar_geometry)
+add_subdirectory(problems)
+add_subdirectory(n_point_solvers)

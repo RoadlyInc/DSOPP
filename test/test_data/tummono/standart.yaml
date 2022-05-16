@@ -1,0 +1,75 @@
+sensors:
+  - id: camera_1
+    type: camera
+    features_extractor:
+      type: eigen
+      point_density_for_detector: 1500
+      quantile_level: 0.6
+    provider:
+      type: image_folder
+      folder: "images"
+      timestamps: "times.txt"
+      timestamps_start_id: 0
+      batch_size: 10
+      start_frame: 0
+    model:
+      calibration: "calib.txt"
+      shutter_time_seconds: 0
+      photometric_calibration: "pcalib.txt"
+      vignetting: "vignette.png"
+    transformations:
+      resize_transformer:
+        resize_ratio: 0.75
+
+    position: world
+
+time:
+  type: no_synchronization
+
+tracker:
+  type: monocular
+  sensor_id: camera_1
+  frame_embedder: off
+  use_imu_prior: off
+  save_images: off
+  number_of_desired_points: 2000
+  keyframe_strategy:
+    strategy: mean_square_optical_flow
+    factor: 1.25 #the larger the more keyframes are created (e.g., 2 = double number of keyframes)
+  marginalization_strategy:
+    strategy: sparse
+    minimum_size: 5
+    maximum_size: 8
+    maximum_percentage_of_marginalized_points_in_frame: 0.95
+  photometric_bundle_adjustment:
+    solver: eigen
+    max_iterations: 7
+  pose_alignment:
+    solver: eigen
+    #poses_file: "./gt.tum"
+    max_iterations: 50
+
+initializer:
+  type: monocular
+  initializer_type: calibrated
+  sensor_id: camera_1
+  essential_matrix_ransac_threshold: 0.5 # in pixels at 1280x720 image
+  pnp_ransac_threshold: 0.5 # in pixels at 1280x720 image
+  se3_inlier_ratio: 0.7
+  reprojection_threshold: 1 # in pixels at 1280x720 image
+  pnp_inlier_ratio: 0.6
+  features_extractor:
+    type: ORB
+    number_of_features: 1500
+  keyframe_strategy:
+    strategy: wait_for_movement
+    sliding_window_length: 3
+
+gnss_alignmenter:
+  mode: on
+  optimize_time_offset: off
+
+sanity_checker:
+  mode: on
+  type: ackermann
+  t_camera_rear_roll_center: "./t_camera_rear_roll_center.txt"

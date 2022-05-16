@@ -1,0 +1,13 @@
+syntax = "proto3";
+package dsopp.sensors.calibration.proto;
+
+message SemanticTag {
+  uint64 code = 1;
+  string name = 2;
+  uint64 weight = 3;
+}
+
+message SemanticLegend {
+  repeated SemanticTag tags = 1;
+}
+

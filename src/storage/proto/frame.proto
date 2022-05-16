@@ -1,0 +1,24 @@
+syntax = "proto3";
+package dsopp.track.proto;
+import "landmark.proto";
+
+message LandmarksFrame {
+  uint32 sensor_id = 1;
+  repeated Landmark landmarks = 2;
+}
+message TrackingFrame {
+  uint64 timestamp = 1;
+  repeated double t_keyframe_agent = 2;
+  repeated double affine_brightness = 3;
+  map<uint32, bytes> image_buffer = 4;
+}
+message Keyframe {
+  uint32 id = 1;
+  uint32 keyframe_id = 8;
+  uint64 timestamp = 2;
+  repeated double t_world_agent = 3;
+  repeated double affine_brightness = 4;
+  repeated LandmarksFrame landmarks = 5;
+  repeated TrackingFrame tracking_frames = 6;
+  map<uint32, bytes> image_buffer = 7;
+}

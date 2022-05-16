@@ -1,0 +1,7 @@
+syntax = "proto3";
+package dsopp.track.proto;
+import "gnss_frame.proto";
+message GnssTrack {
+  repeated double t_world_local = 1;
+  repeated GnssFrame frames = 2;
+}

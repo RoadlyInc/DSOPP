@@ -1,0 +1,12 @@
+if(VISUALIZATION)
+  dsopp_add_test_and_coverage(
+    test_visualizer
+    visualizer/test_visualizer.cpp
+    visualizer
+    sensors
+    sophus
+    track
+    gmock
+    gmock_main
+    settings)
+endif()
