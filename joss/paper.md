@@ -1,5 +1,5 @@
 ---
-title: 'DSO++: '
+title: 'DSO++: Reimplementation of Direct Sparse Odometry'
 tags:
   - SLAM
   - odometry
@@ -14,6 +14,8 @@ authors:
   - name: Daniil Sinitsyn^[co-first author]
     affiliation: 1
   - name: Maxim Smolsky
+    affiliation: 1
+  - name: Evgeny Nikolsky
     affiliation: 1
 affiliations:
  - name: Roadly Inc
