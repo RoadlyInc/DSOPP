@@ -2,7 +2,8 @@
 
 We are using [Google C++ Style Guide]
 
-All files including CMake, python, c++ headers/sources should be formatted. There is `format.sh` script to help you with it. Run it from project root as follows:
+All files including CMake, python, c++ headers/sources should be formatted. There is `format.sh` script to help you with it. 
+Run it from project's root as follows:
 
 ```
 bash fromat.sh
