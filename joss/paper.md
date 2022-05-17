@@ -1,5 +1,5 @@
 ---
-title: 'DSO++: Reimplementation of Direct Sparse Odometry'
+title: 'DSO++: Modern reimplementation of Direct Sparse Odometry'
 tags:
   - SLAM
   - odometry
@@ -9,15 +9,18 @@ authors:
   - name: Sergei Solonets^[co-first author]
     orcid: 0000-0002-3469-7489
     affiliation: "1, 2" 
-  - name: Igor Ilyin^[co-first author]
+  - name: Igor Ilin^[co-first author]
     affiliation: 1
+    orcid: 0000-0002-1834-4894
   - name: Daniil Sinitsyn^[co-first author]
     affiliation: 1
     orcid: 0000-0002-9102-9065
-  - name: Maxim Smolsky
+  - name: Maksim Smolskii
     affiliation: 1
+    orcid: 0000-0001-9414-0853
   - name: Oleg Chemokos 
     affiliation: 1
+    orcid: 0000-0003-2830-4340
   - name: Eugene Nikolsky
     affiliation: 1
 affiliations:
@@ -26,8 +29,6 @@ affiliations:
  - name: Technical University of Munich
    index: 2
 date: 17 May 2022
-codeRepository: https://github.com/RoadlyInc/DSOPP
-license: LGPLv3
 bibliography: paper.bib
 
 ---
