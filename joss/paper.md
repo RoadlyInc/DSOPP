@@ -13,7 +13,10 @@ authors:
     affiliation: 1
   - name: Daniil Sinitsyn^[co-first author]
     affiliation: 1
+    orcid: 0000-0002-9102-9065
   - name: Maxim Smolsky
+    affiliation: 1
+  - name: Oleg Chemokos 
     affiliation: 1
   - name: Evgeny Nikolsky
     affiliation: 1
