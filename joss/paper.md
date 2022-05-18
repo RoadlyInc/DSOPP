@@ -3,7 +3,7 @@ title: 'DSO++: Modern reimplementation of Direct Sparse Odometry'
 tags:
   - SLAM
   - odometry
-	@@ -9,32 +9,30 @@ authors:
+authors:
   - name: Sergei Solonets^[co-first author]
     orcid: 0000-0002-3469-7489
     affiliation: "1, 2" 
