@@ -29,7 +29,7 @@ size_t numberOfMarginalizedLandmarks(const track::ActiveKeyframe<Motion> &frame)
   long n = 0;
   for (auto sensor : frame.sensors()) {
     const auto &active_landmarks = frame.activeLandmarks(sensor);
-    n += std::ranges::count_if(active_landmarks, [](const auto &l) { return !l.isOutlier() && l.isMarginalized(); });
+    n += std::ranges::count_if(active_landmarks, [](const auto &l) { return l.isOutlier() || l.isMarginalized(); });
   }
   return static_cast<size_t>(n);
 }
@@ -55,10 +55,12 @@ void findFramesWithSmallNumberOfActivePoints(const track::ActiveOdometryTrack<Mo
 template <energy::motion::Motion Motion>
 void marginalizeLandmarks(track::ActiveOdometryTrack<Motion> &track,
                           const size_t min_good_residuals_in_the_last_optimization,
-                          const size_t number_of_good_optimizations, const size_t keep_frames_from_start) {
+                          const size_t number_of_good_optimizations, const size_t keep_frames_from_start,
+                          std::set<size_t> &frames_to_marginalize) {
   if (track.activeFrames().size() > keep_frames_from_start) {
     size_t last_keyframe_idx = track.activeFrames().back()->keyframeId();
     for (size_t frame_idx = 0; frame_idx < track.activeFrames().size() - 1; frame_idx++) {
+      bool frame_to_marginalize = frames_to_marginalize.count(frame_idx);
       auto &frame = track.getActiveKeyframe(frame_idx);
       for (auto sensor : frame.sensors()) {
         for (size_t landmark_idx = 0; landmark_idx < frame.activeLandmarks(sensor).size(); landmark_idx++) {
@@ -66,20 +68,21 @@ void marginalizeLandmarks(track::ActiveOdometryTrack<Motion> &track,
           if (landmark.isMarginalized() || landmark.isOutlier()) {
             continue;
           }
-          bool out_of_boundary = true;
+          bool out_of_boundary = frame_to_marginalize;
           for (auto target_sensor : frame.sensors()) {
             auto last_status = frame.getConnection(last_keyframe_idx)
                                    .referenceReprojectionStatuses(sensor, target_sensor)
                                    .at(landmark_idx);
-            out_of_boundary &= last_status != track::PointConnectionStatus::kOk;
+            out_of_boundary |= last_status != track::PointConnectionStatus::kOk;
           }
           bool valid_for_marginalization =
               (landmark.numberOfInlierResidualsInTheLastOptimization() >= min_good_residuals_in_the_last_optimization &&
                landmark.numberOfSuccessfulOptimizations() > number_of_good_optimizations);
-          if (out_of_boundary || valid_for_marginalization) {
-            landmark.marginalize();
-          } else if (out_of_boundary && !valid_for_marginalization) {
+          bool sufficient_for_marginalization = landmark.numberOfSuccessfulOptimizations() > 0;
+          if (out_of_boundary && !sufficient_for_marginalization) {
             landmark.markOutlier();
+          } else if (out_of_boundary || valid_for_marginalization) {
+            landmark.marginalize();
           }
         }
       }
@@ -155,7 +158,8 @@ void SparseFrameMarginalizationStrategy<Motion>::marginalize(track::ActiveOdomet
   findFramesWithSmallNumberOfActivePoints(track, kKeepFramesFromStart, maximum_number_of_marginalized_, minimum_size_,
                                           to_marginalize);
   findFramesToMarginalize(track, kKeepFramesFromStart, kMinFrameAge, maximum_size_, to_marginalize);
-  marginalizeLandmarks(track, kMinGoodResidualsInTheLastOptimization, kNumberOfGoodOptimizations, kKeepFramesFromStart);
+  marginalizeLandmarks(track, kMinGoodResidualsInTheLastOptimization, kNumberOfGoodOptimizations, kKeepFramesFromStart,
+                       to_marginalize);
 
   // marginalize
   for (const auto &to_marginalize_idx : to_marginalize) {
