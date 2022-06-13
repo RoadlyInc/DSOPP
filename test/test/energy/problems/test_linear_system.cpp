@@ -117,10 +117,13 @@ class LinearSystemTest : public ::testing::Test {
                             features::PixelMap, C>(frames);
     evaluateJacobians<Precision, SE3, typename test_tools::SolverTestData<SE3>::Model, Pattern::kSize,
                       features::PixelMap, C, false, true, true, true, true>(frames, kHuberSigma);
+    changeResidualStatuses(frames);
+
     firstEstimateJacobians_<double, SE3, typename test_tools::SolverTestData<SE3>::Model, Pattern::kSize,
                             features::PixelMap, C>(frames_double_precision);
     evaluateJacobians<double, SE3, typename test_tools::SolverTestData<SE3>::Model, Pattern::kSize, features::PixelMap,
                       C, false, true, true, true, true>(frames_double_precision, kHuberSigma);
+    changeResidualStatuses(frames_double_precision);
     buildDenseSystem(frames_double_precision, data.sensor, jacobian_dense, residuals_dense, kHuberSigma);
     num_idepths = jacobian_dense.cols() - static_cast<long>(kBlockSize * kNumFrames);
   }

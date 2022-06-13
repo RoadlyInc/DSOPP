@@ -15,6 +15,10 @@ get_filename_component(eigen_cmake "${eigen_INCLUDE_DIRS}/../../share/eigen3/cma
 set(template_specialization_file_dir
         ${CMAKE_CURRENT_BINARY_DIR}/3rd_party/src/ceres_external/internal/ceres/
         )
+set(ceres_find_cmake_dir
+        ${CMAKE_CURRENT_BINARY_DIR}/3rd_party/src/ceres_external/cmake/
+        )
+
 set(template_specialization_file
         generate_template_specializations.py
         )
@@ -28,10 +32,13 @@ if (NOT EXISTS ${ceres_LIBS})
                 -DCMAKE_BUILD_TYPE=Release
                 -DCERES_THREADING_MODEL=CXX_THREADS
                 -DCMAKE_CXX_STANDARD=20
-                -DCMAKE_CXX_FLAGS=-march=native -std=c++20
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON
+                -DCMAKE_CXX_FLAGS=-march=native
                 -DCMAKE_INSTALL_PREFIX=./install
                 -DBUILD_TESTING=OFF
                 -DCXSPARSE=OFF
+                -DBUILD_BENCHMARKS=OFF
+                -DGFLAGS=OFF
                 -DGLOG_INCLUDE_DIR=${glog_INCLUDE_DIRS}
                 -DGLOG_LIBRARY=${glog_lib}
                 -DBUILD_EXAMPLES=OFF
@@ -39,7 +46,8 @@ if (NOT EXISTS ${ceres_LIBS})
             TEST_COMMAND ""
             PATCH_COMMAND
                 sed -i -e "s|(4, 4, \"Eigen::Dynamic\")|(8, 1, 8)|" ${template_specialization_file_dir}${template_specialization_file} &&
-                cd ${template_specialization_file_dir} && python2 ${template_specialization_file}
+                cd ${template_specialization_file_dir} && python2 ${template_specialization_file} &&
+                cd ${ceres_find_cmake_dir} && wget https://raw.githubusercontent.com/ceres-solver/ceres-solver/master/cmake/FindTBB.cmake
             PREFIX 3rd_party
             EXCLUDE_FROM_ALL 1
             )

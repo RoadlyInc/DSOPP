@@ -1,6 +1,8 @@
 #ifndef DSOPP_TRACKER_MONOCULAR_INITIALIZER_PURE_ROTATION_ESTIMATOR_HPP_
 #define DSOPP_TRACKER_MONOCULAR_INITIALIZER_PURE_ROTATION_ESTIMATOR_HPP_
 
+#include <optional>
+
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
 

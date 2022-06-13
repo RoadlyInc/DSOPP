@@ -15,11 +15,11 @@ enum ModelType { kPinholeCamera, kSimpleRadialCamera, kDivisionModelCamera, kTum
  *
  * Camera should know it's type and number of the intrinsics parameters.
  */
-template <typename CameraModel>
-concept Model = requires(const CameraModel &model) {
-  { CameraModel::Type }
+template <typename ConstraintModel>
+concept Model = requires(const ConstraintModel &model) {
+  { ConstraintModel::Type }
   ->std::convertible_to<ModelType>;
-  { CameraModel::DoF }
+  { ConstraintModel::DoF }
   ->std::convertible_to<int>;
 };
 

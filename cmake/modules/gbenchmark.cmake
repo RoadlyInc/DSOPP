@@ -13,6 +13,7 @@ set(gbenchmark_main_LIBS
 )
 
 if(NOT EXISTS ${gbenchmark_LIBS})
+  set(gbenchmark_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-restrict -march=native")
   ExternalProject_Add(
     gbenchmark_external
     GIT_REPOSITORY ${URL}
@@ -24,8 +25,9 @@ if(NOT EXISTS ${gbenchmark_LIBS})
       -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/3rd_party/src/gbenchmark_external-build/install/
       -DBENCHMARK_ENABLE_INSTALL=ON
       -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-march=native
-      -std=c++20
+      -DCMAKE_CXX_FLAGS=${gbenchmark_CXX_FLAGS}
+      -DCMAKE_CXX_STANDARD=20
+      -DCMAKE_CXX_STANDARD_REQUIRED=ON
     PREFIX 3rd_party
     EXCLUDE_FROM_ALL 1)
 endif()

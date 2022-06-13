@@ -25,7 +25,6 @@ class SimpleRadialCamera : public CameraModelBase {
   using CastT = SimpleRadialCamera<Scalar>;
   /** DoF in the intrinsics parameters*/
   static int constexpr DoF = 5;
-  static_assert(Model<SimpleRadialCamera<T>>);
   /**
    * Constructor
    *

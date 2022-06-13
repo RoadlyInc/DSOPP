@@ -19,7 +19,7 @@
 #include "output_interfaces/text_output_interface.hpp"
 #include "output_interfaces/track_output_interface.hpp"
 #include "sensors/sensors.hpp"
-#if VISUALIZATION
+#ifdef VISUALIZATION
 #include "visualizer/visualizer.hpp"
 #endif
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 
   dsopp->addTrackOutputInterface(*saver);
 
-#if VISUALIZATION
+#ifdef VISUALIZATION
   std::cout << "test" << std::endl;
   std::thread runthread;
   auto visualizer = std::make_unique<dsopp::output::Visualizer>(1920, 1080);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
 
   dsopp->run(number_of_threads - 1);
 
-#if VISUALIZATION
+#ifdef VISUALIZATION
   if (runthread.joinable()) {
     runthread.join();
   }

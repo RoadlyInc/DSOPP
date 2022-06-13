@@ -31,7 +31,6 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     ninja-build \
     wget \
     ffmpeg \
-    libgflags-dev \
     python \
     python3 \
     python3-pip \
