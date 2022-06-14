@@ -1,6 +1,7 @@
 #ifndef DSOPP_FEATURE_BASED_SLAM_TRACKER_CREATE_LANDMARKS_HPP
 #define DSOPP_FEATURE_BASED_SLAM_TRACKER_CREATE_LANDMARKS_HPP
 
+#include <stddef.h>
 #include <deque>
 #include <vector>
 

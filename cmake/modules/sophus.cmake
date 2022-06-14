@@ -14,6 +14,7 @@ if (NOT EXISTS ${sophus_INCLUDE_DIR}/sophus)
             GIT_TAG        ${VERSION}
             CMAKE_ARGS
                 -DCMAKE_BUILD_TYPE=Release
+                -DBUILD_TESTS=OFF
                 -DEigen3_DIR=${eigen_cmake}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""

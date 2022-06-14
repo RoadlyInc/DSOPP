@@ -40,7 +40,7 @@ bool MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>::needNewKeyframe(
 }
 
 template <energy::motion::Motion Motion>
-MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>::~MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>() = default;
+MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>::~MeanSquareOpticalFlowAndRmseKeyframeStrategy() = default;
 
 template class MeanSquareOpticalFlowAndRmseKeyframeStrategy<energy::motion::SE3<Precision>>;
 

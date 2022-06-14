@@ -1,6 +1,7 @@
 #ifndef DSOPP_FEATURE_BASED_SLAM_TRACKER_ADD_NEW_LAMDMARKS_HPP
 #define DSOPP_FEATURE_BASED_SLAM_TRACKER_ADD_NEW_LAMDMARKS_HPP
 
+#include <stddef.h>
 #include <vector>
 
 namespace dsopp {

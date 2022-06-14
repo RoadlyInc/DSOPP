@@ -37,6 +37,18 @@ void BundleAdjustmentPhotometricEvaluationCallback<Scalar, Motion, Model, Patter
     evaluateJacobians<Scalar, Motion, Model, PatternSize, Grid2D, C, FIRST_ESTIMATE_JACOBIANS, OPTIMIZE_IDEPTHS, false,
                       true>(frames_);
   }
+
+  if (new_evaluation_point) {
+    for (auto &f : frames_) {
+      for (auto &[_, m] : f->residuals) {
+        for (auto &[__, v] : m) {
+          for (auto &residual : v) {
+            residual.connection_status = residual.connection_status_candidate;
+          }
+        }
+      }
+    }
+  }
 }
 
 #define PBAEvaluationCallbackInstantiation(Motion, Model, PatchSize, Grid, C, FIRST_ESTIMATE_JACOBIANS,         \

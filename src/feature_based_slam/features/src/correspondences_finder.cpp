@@ -11,7 +11,7 @@ std::pair<std::unique_ptr<DistinctFeaturesFrame>, std::vector<Correspondence>> f
   // reference frame doesn't exist
   if (!features_from) {
     auto reference_features_frame = feature_extractor.extract(image_to, mask, true);
-    return {std::move(reference_features_frame), {}};
+    return {std::move(reference_features_frame), std::vector<Correspondence>{}};
   }
 
   return finder(*features_from, image_from, image_to, &feature_extractor, mask);

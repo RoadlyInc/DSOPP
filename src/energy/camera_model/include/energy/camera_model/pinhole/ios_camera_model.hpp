@@ -82,7 +82,7 @@ class IOSCamera : public CameraModelBase {
 
     for (int i = 0; i < kGaussNewtoniteration_number; ++i) {
       Vec<Scalar, 2> pt_2d;
-      project_internal(ray, pt_2d, &J);
+      if (!project_internal(ray, pt_2d, &J)) return false;
       Vec<Scalar, 2> iterationResidual = point_ - pt_2d;
       Vec<Scalar, 3> delta_ray = (J.transpose() * J).colPivHouseholderQr().solve(J.transpose() * iterationResidual);
       ray += delta_ray;

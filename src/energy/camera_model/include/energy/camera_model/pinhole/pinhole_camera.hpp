@@ -27,7 +27,6 @@ class PinholeCamera : public CameraModelBase {
   using CastT = PinholeCamera<Scalar>;
   /** DoF in the intrinsics parameters*/
   static int constexpr DoF = 4;
-  static_assert(Model<PinholeCamera<T>>);
   /**
    * creates Pinhole camera from the intrinsics parameters
    *
