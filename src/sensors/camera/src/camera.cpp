@@ -24,6 +24,36 @@
 
 namespace dsopp {
 namespace sensors {
+namespace {
+/**
+ * Photometrically corrects and undistorts image
+ *
+ * @param image image
+ * @param photometric_calibration photometric calibration
+ * @param vignetting vignetting
+ * @param transformers transformers
+ * @param undistorter undistorter
+ * @return photometrically corrected and undistorted image
+ */
+cv::Mat photometricallyCorrectAndUndistortImage(
+    const cv::Mat &image,
+    const dsopp::sensors::calibration::CameraSettings::PhotometricCalibration &photometric_calibration,
+    const dsopp::sensors::calibration::CameraSettings::Vignetting &vignetting,
+    const std::vector<std::unique_ptr<camera_transformers::CameraTransformer>> &transformers,
+    const calibration::Undistorter &undistorter) {
+  auto width = static_cast<int>(image.cols);
+  auto height = static_cast<int>(image.rows);
+  cv::Mat image_grayscale;
+  cv::cvtColor(image, image_grayscale, cv::COLOR_BGR2GRAY);
+  std::vector<Precision> photocorrected_image_vector =
+      features::photometricallyCorrectedImage(image_grayscale, photometric_calibration, vignetting);
+  cv::Mat photocorrected_image(height, width, std::is_same_v<dsopp::Precision, double> ? CV_64FC1 : CV_32FC1,
+                               photocorrected_image_vector.data());
+  cv::Mat photocorrected_undistorted_image =
+      camera_transformers::runImageTransformers(transformers, undistorter.undistort(photocorrected_image));
+  return photocorrected_undistorted_image;
+}
+}  // namespace
 
 Camera::Camera(const std::string &name, size_t id, const calibration::CameraSettings &camera_settings,
                std::unique_ptr<providers::CameraProvider> &&provider,
@@ -67,17 +97,10 @@ bool Camera::processNextDataFrame(sensors::SynchronizedFrame &frame) {
   }
 
   cv::Mat image = next_frame->data();
-  cv::Mat transformed_image = runImageTransformers(transformers_, image);
-  cv::Mat raw_undistorted_image = undistorter.undistort(transformed_image);
-  auto width = static_cast<int>(transformed_image.cols);
-  auto height = static_cast<int>(transformed_image.rows);
-  cv::Mat transformed_image_grayscale;
-  cv::cvtColor(transformed_image, transformed_image_grayscale, cv::COLOR_BGR2GRAY);
-  std::vector<Precision> photocorrected_image_vector = features::photometricallyCorrectedImage(
-      transformed_image_grayscale, camera_settings_.photometricCalibration(), camera_settings_.vignetting());
-  cv::Mat photocorrected_image(height, width, std::is_same_v<dsopp::Precision, double> ? CV_64FC1 : CV_32FC1,
-                               photocorrected_image_vector.data());
-  cv::Mat photocorrected_undistorted_image = undistorter.undistort(photocorrected_image);
+  cv::Mat raw_undistorted_image =
+      camera_transformers::runImageTransformers(transformers_, undistorter.undistort(image));
+  cv::Mat photocorrected_undistorted_image = photometricallyCorrectAndUndistortImage(
+      image, camera_settings_.photometricCalibration(), camera_settings_.vignetting(), transformers_, undistorter);
 
   frame.addCameraFeatures(
       this->id(),
