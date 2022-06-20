@@ -102,7 +102,8 @@ std::unique_ptr<Camera> createCamera(
 
   std::string tracking_feature_extractor_type = "sobel";
   Precision point_density_for_detector = 1500;
-  Precision quantile_level = 0.6_p;
+  Precision quantile_level = 0.8_p;
+  Precision weight_of_mean = 1.0_p;
   if (parameters.contains("features_extractor")) {
     const auto &features_extractor =
         std::any_cast<std::map<std::string, std::any>>(parameters.at("features_extractor"));
@@ -110,6 +111,7 @@ std::unique_ptr<Camera> createCamera(
     common::fabric_tools::readParameter(point_density_for_detector, features_extractor, "point_density_for_detector");
     if (tracking_feature_extractor_type == "sobel") {
       common::fabric_tools::readParameter(quantile_level, features_extractor, "quantile_level");
+      common::fabric_tools::readParameter(weight_of_mean, features_extractor, "weight_of_mean");
     }
   } else {
     LOG(WARNING) << "Missing field \"features_extractor\"";
@@ -117,8 +119,8 @@ std::unique_ptr<Camera> createCamera(
 
   std::unique_ptr<features::TrackingFeaturesExtractor> tracking_feature_extractor;
   if (tracking_feature_extractor_type == "sobel") {
-    tracking_feature_extractor =
-        std::make_unique<features::SobelTrackingFeaturesExtractor>(point_density_for_detector, quantile_level);
+    tracking_feature_extractor = std::make_unique<features::SobelTrackingFeaturesExtractor>(
+        point_density_for_detector, quantile_level, weight_of_mean);
   } else if (tracking_feature_extractor_type == "eigen") {
     tracking_feature_extractor = std::make_unique<features::EigenTrackingFeaturesExtractor>(point_density_for_detector);
   } else {

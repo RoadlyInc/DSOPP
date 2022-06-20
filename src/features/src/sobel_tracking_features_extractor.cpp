@@ -1,7 +1,6 @@
 #include "features/camera/sobel_tracking_features_extractor.hpp"
 
 #include <optional>
-#include <random>
 
 #include "features/camera/pixel_data_frame.hpp"
 #include "features/camera/pixel_map.hpp"
@@ -23,26 +22,35 @@ namespace {
  * @param current_threshold current threshold which needs to be modified
  * @return new threshold
  */
-int calculateThreshold(int num_pixels, int desired_points, int found_points, int current_threshold) {
-  return static_cast<int>(current_threshold * std::log(num_pixels / desired_points) /
-                          std::log(num_pixels / found_points));
+Precision calculateThreshold(int num_pixels, int desired_points, int found_points, Precision current_threshold) {
+  return current_threshold *
+         static_cast<Precision>(std::log(num_pixels / desired_points) / std::log(num_pixels / found_points));
 }
 
 /**
  * calculate q-quantile of gradient norms
  *
  * @param grad_norm matrix of gradient norm squared for all pixels
+ * @param mask mask for valid points
  * @param q quantile level
  * @return q-quantile of gradient norms
  */
-int16_t quantile(cv::Mat &grad_norm, Precision q) {
-  std::vector<int16_t> grad_norms(grad_norm.begin<int16_t>(), grad_norm.end<int16_t>());
+int16_t quantile(cv::Mat &grad_norm, const sensors::calibration::CameraMask &mask, Precision q) {
+  std::vector<int16_t> grad_norms;
+  grad_norms.reserve(static_cast<size_t>(grad_norm.rows * grad_norm.cols));
+  for (int y = 0; y < grad_norm.rows; ++y) {
+    for (int x = 0; x < grad_norm.cols; ++x) {
+      if (mask.valid(x, y)) {
+        grad_norms.push_back(grad_norm.at<int16_t>(y, x));
+      }
+    }
+  }
   std::nth_element(grad_norms.begin(),
                    grad_norms.begin() + static_cast<long>(static_cast<Precision>(grad_norms.size()) * q),
                    grad_norms.end());
 
   return static_cast<int16_t>(grad_norms[static_cast<size_t>(static_cast<Precision>(grad_norms.size()) * q)]);
-}
+}  // namespace
 
 /**
  * find point with high gradient in window_size X window_size block
@@ -53,26 +61,58 @@ int16_t quantile(cv::Mat &grad_norm, Precision q) {
  * @param window_start_x x coord of start point in common matrix
  * @param window_start_y y coord of start point in common matrix
  * @param grad_norm_threshold threshold for gradient norm
+ * @param weight_of_mean weight of mean in threshold
  * @return first point with enough high gradient if it exist
  */
 std::optional<Eigen::Matrix<Precision, 2, 1>> findPointInWindow(cv::Mat &grad_norm,
                                                                 const sensors::calibration::CameraMask &mask,
                                                                 int window_size, int window_start_x, int window_start_y,
-                                                                int grad_norm_threshold) {
+                                                                Precision grad_norm_threshold,
+                                                                Precision weight_of_mean) {
+  Precision average =
+      static_cast<Precision>(cv::mean(grad_norm(cv::Range(window_start_y, window_start_y + window_size),
+                                                cv::Range(window_start_x, window_start_x + window_size)))[0]);
+  Precision threshold = std::sqrt((weight_of_mean * average * average + grad_norm_threshold * grad_norm_threshold) /
+                                  (1 + weight_of_mean));
   for (int y = window_start_y; y < window_start_y + window_size; ++y) {
     for (int x = window_start_x; x < window_start_x + window_size; ++x) {
-      if (grad_norm.at<int16_t>(y, x) > grad_norm_threshold && mask.valid(x, y)) {
+      if (grad_norm.at<int16_t>(y, x) > threshold && mask.valid(x, y)) {
         return Eigen::Matrix<Precision, 2, 1>(x, y);
       }
     }
   }
   return std::nullopt;
 }
+
+/**
+ * calculate number of valid points on image by mask
+ *
+ * @param mask mask for valid points
+ * @return part of valid points from all points on image
+ */
+Precision validAreaRatio(const sensors::calibration::CameraMask &mask) {
+  cv::Mat mask_image = mask.openCVCompatibleMask();
+  int rows = mask_image.rows;
+  int cols = mask_image.cols;
+
+  int valid_pixels = 0;
+  for (int y = 0; y < rows; ++y) {
+    for (int x = 0; x < cols; ++x) {
+      if (mask.valid(x, y)) {
+        valid_pixels++;
+      }
+    }
+  }
+  return static_cast<Precision>(valid_pixels) / static_cast<Precision>(rows * cols);
+}
 }  // namespace
 
 SobelTrackingFeaturesExtractor::SobelTrackingFeaturesExtractor(const Precision point_density_for_detector,
-                                                               const Precision quantile_level)
-    : TrackingFeaturesExtractor(point_density_for_detector), quantile_level_(quantile_level) {}
+                                                               const Precision quantile_level,
+                                                               const Precision weight_of_mean)
+    : TrackingFeaturesExtractor(point_density_for_detector),
+      quantile_level_(quantile_level),
+      weight_of_mean_(weight_of_mean) {}
 
 std::unique_ptr<TrackingFeaturesFrame> SobelTrackingFeaturesExtractor::extract(
     cv::Mat pixel_frame, const sensors::calibration::CameraMask &camera_mask) {
@@ -90,27 +130,24 @@ std::unique_ptr<TrackingFeaturesFrame> SobelTrackingFeaturesExtractor::extract(
   cv::Mat canny_y_abs = cv::abs(canny_y);
   cv::Mat grad_norm = canny_x_abs + canny_y_abs;  // L1 norm is used due it's more simpler and to avoid overflow
 
-  auto rng = std::default_random_engine{};
   auto mask = camera_mask.getEroded(kBorderSize).getEroded(kGradientBorder);
 
   if (!initialized_) {
     initialized_ = true;
-    grad_norm_threshold_ = quantile(grad_norm, quantile_level_);
-    Precision potential = std::sqrt(static_cast<Precision>(pixel_frame.rows * pixel_frame.cols) *
-                                    (1_p - quantile_level_) / point_density_for_detector_);
-    Precision kMinPotential = 1_p;
-    if (potential < kMinPotential) {
-      point_density_for_detector_ *= potential * potential / (kMinPotential * kMinPotential);
-      potential = kMinPotential;
-    }
-    current_potential_ = static_cast<int>(potential);
+    Precision kMaxPointsNumber = 8000;
+
+    grad_norm_threshold_ = std::sqrt(std::max(weight_of_mean_, 1.0_p)) * quantile(grad_norm, mask, quantile_level_);
+    Precision valid_area = validAreaRatio(mask);
+    point_density_for_detector_ = std::min(point_density_for_detector_, valid_area * kMaxPointsNumber);
+    current_potential_ = static_cast<int>(std::sqrt(static_cast<Precision>(pixel_frame.rows * pixel_frame.cols) *
+                                                    (valid_area / 2) / point_density_for_detector_));
   }
 
   int window_size = current_potential_;
 
   for (int y = 0; y + window_size < grad_norm.rows; y += window_size) {
     for (int x = 0; x + window_size < grad_norm.cols; x += window_size) {
-      auto point = findPointInWindow(grad_norm, mask, window_size, x, y, grad_norm_threshold_);
+      auto point = findPointInWindow(grad_norm, mask, window_size, x, y, grad_norm_threshold_, weight_of_mean_);
       if (point) {
         tracking_features.emplace_back(*point);
       }
@@ -122,12 +159,6 @@ std::unique_ptr<TrackingFeaturesFrame> SobelTrackingFeaturesExtractor::extract(
   grad_norm_threshold_ =
       calculateThreshold(pixel_frame.rows * pixel_frame.cols, static_cast<int>(point_density_for_detector_),
                          static_cast<int>(found_points), grad_norm_threshold_);
-
-  std::shuffle(tracking_features.begin(), tracking_features.end(), rng);
-  if (static_cast<Precision>(tracking_features.size()) > point_density_for_detector_) {
-    tracking_features.erase(tracking_features.begin() + static_cast<long>(point_density_for_detector_),
-                            tracking_features.end());
-  }
 
   return std::make_unique<TrackingFeaturesFrame>(std::move(tracking_features));
 }
