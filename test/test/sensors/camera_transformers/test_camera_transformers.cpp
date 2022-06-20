@@ -146,7 +146,7 @@ TEST(testCameraTransformers, cameraWithTransformsTest) {
                                                 Eigen::Vector4<Precision>::Zero(),
                                                 dsopp::energy::model::ModelType::kPinholeCamera);
     auto photo_calib = calibration::photometric_calibration::create(TEST_DATA_DIR "track30seconds/pcalib.txt");
-    auto vignetting = calibration::vignetting::create(TEST_DATA_DIR "track30seconds/vignetting.png");
+    auto vignetting = cv::Mat();
 
     Eigen::Vector2<int> im_size = calib.image_size().cast<int>();
     auto camera_mask = calibration::CameraMask(im_size.y(), im_size.x());

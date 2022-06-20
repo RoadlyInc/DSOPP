@@ -14,11 +14,11 @@ class SemanticLegend;
 class SemanticFilter;
 }  // namespace semantics
 namespace sensors {
-
 namespace calibration {
 class CameraMask;
 }  // namespace calibration
 }  // namespace sensors
+
 namespace features {
 class TrackingFeaturesFrame;
 class TrackingFeaturesExtractor;
@@ -39,15 +39,16 @@ class CameraFeatures {
    * Creating a camera features frame from frame data and an identifier.
    *
    * @param frame_id frame identifier
-   * @param raw_image raw image loaded by data provider
+   * @param undistorted_image undistorted image loaded by data provider
+   * @param photocorrected_undistorted_image photometrically corrected undistorted image loaded by data provider
    * @param time time when sensor captured data
    * @param pyramid_of_static_masks pyramid of static camera masks at the current time
    * @param tracking_features_extractor, pixel_data_frame_extractor,
    * @param semantics_data semantics data
    * @param semantic_filter filter legend (if exists, may be nullptr)
    */
-  CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, const time time,
-                 const std::vector<sensors::calibration::CameraMask>& pyramid_of_static_masks,
+  CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, cv::Mat&& photocorrected_undistorted_image,
+                 const time time, const std::vector<sensors::calibration::CameraMask>& pyramid_of_static_masks,
                  features::TrackingFeaturesExtractor& tracking_features_extractor,
                  const features::PixelDataFrameExtractor& pixel_data_frame_extractor,
                  std::unique_ptr<cv::Mat>&& semantics_data = nullptr,
@@ -111,8 +112,10 @@ class CameraFeatures {
   size_t frame_id_;
   /** The main container which contains raw image. */
   cv::Mat raw_image_;
-  /** frame data. */
+  /** photometrically corrected and undistorted frame data. */
   cv::Mat frame_data_;
+  /** undistorted frame data. */
+  cv::Mat raw_frame_data_;
   /** time of the frame. */
   time time_;
   /** camera mask at the current time. */
