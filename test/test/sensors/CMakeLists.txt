@@ -13,8 +13,7 @@ dsopp_add_test_and_coverage(
   camera_calibration
   camera_providers
   features
-  settings
-  sensors_builder)
+  settings)
 
 dsopp_add_test(
   test_undistorter

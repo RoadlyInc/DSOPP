@@ -110,8 +110,8 @@ TEST_F(testPinholeCamera, generalEpipolarLine) {
     for (const auto &point : epipolar_line) {
       Eigen::Vector2<Precision> x;
       ASSERT_TRUE(reprojector.reproject(observed_point, point.reference_idepth, x) or
-                  std::abs(x(0) - kBorderSize) < 1e-1 or std::abs(x(0) - img_size(0) + kBorderSize + 1) < 1e-1 or
-                  std::abs(x(1) - kBorderSize) < 1e-1 or std::abs(x(1) - img_size(1) + kBorderSize + 1) < 1e-1)
+                  std::abs(x(0) - kBorderSize) < 1e-2 or std::abs(x(0) - img_size(0) + kBorderSize + 1) < 1e-2 or
+                  std::abs(x(1) - kBorderSize) < 1e-2 or std::abs(x(1) - img_size(1) + kBorderSize + 1) < 1e-2)
           << point.reference_idepth << " : " << x.transpose();
       line.emplace_back(x);
     }

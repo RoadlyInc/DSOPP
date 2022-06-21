@@ -36,13 +36,13 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     python3-pip \
     libeigen3-dev \
     libsuitesparse-dev \
+    python3-networkx \
     git \
     && pip3 install --upgrade pip \
     && pip3 install cmake-format \
     && pip3 install conan \
     && pip3 install pydot \
     && pip3 install pydotplus \
-    && pip3 install networkx \
     && pip3 install pyyaml \
     && pip3 install sympy \
     && pip3 install scipy \

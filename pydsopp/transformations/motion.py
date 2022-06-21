@@ -6,6 +6,7 @@ from math import sqrt
 
 class Motion:
     """ 3 dimensional group of similarity transformations """
+
     def __init__(self, q, t):
         """
         Construct `Motion` from q,t or sympy matrix

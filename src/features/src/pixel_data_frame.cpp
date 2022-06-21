@@ -4,17 +4,20 @@
 #include <numeric>
 
 #include "features/camera/downscale_image.hpp"
+#include "features/camera/photometrically_corrected_image.hpp"
 #include "features/camera/pixel_map.hpp"
 
 namespace dsopp::features {
 
-PixelDataFrame::PixelDataFrame(const cv::Mat &image, size_t levels) {
+PixelDataFrame::PixelDataFrame(const cv::Mat &image, const PhotometricCalibration &photometric_calibration,
+                               const Vignetting &vignetting, size_t levels) {
   levels = std::min(levels, kMaxPyramidDepth);
+
+  // TODO Do vignetting before undistorting to avoid division by zero
+  std::vector<Precision> zero_level = photometricallyCorrectedImage(image, photometric_calibration, vignetting);
 
   auto width = static_cast<int>(image.cols);
   auto height = static_cast<int>(image.rows);
-
-  std::vector<Precision> zero_level(image.begin<Precision>(), image.end<Precision>());
 
   pyramid_.emplace_back(std::move(zero_level), width, height);
   for (size_t level = 1; level < levels; ++level) {
