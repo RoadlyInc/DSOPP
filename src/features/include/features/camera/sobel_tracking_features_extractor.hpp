@@ -22,21 +22,17 @@ class SobelTrackingFeaturesExtractor : public TrackingFeaturesExtractor {
    * Creates a tracking feature extractor.
    * @param point_density_for_detector desired number of the feature points
    * @param quantile_level quantile level for gradient norm threshold
-   * @param weight_of_mean weight of mean value of gradient in block for gradient threshold
    */
   explicit SobelTrackingFeaturesExtractor(const Precision point_density_for_detector = 1500,
-                                          const Precision quantile_level = 0.8_p,
-                                          const Precision weight_of_mean = 1.0_p);
+                                          const Precision quantile_level = 0.6_p);
 
   std::unique_ptr<TrackingFeaturesFrame> extract(cv::Mat image, const sensors::calibration::CameraMask &mask) override;
 
  private:
   /** quantile level for gradient norm threshold */
-  Precision quantile_level_;
-  /** weight of mean value of gradient in block for gradient threshold */
-  Precision weight_of_mean_;
+  const Precision quantile_level_;
   /** minimum of gradient norm */
-  Precision grad_norm_threshold_;
+  int grad_norm_threshold_;
   /** ``true`` after initialization of the all fields */
   bool initialized_ = false;
 };
