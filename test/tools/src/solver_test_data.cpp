@@ -47,7 +47,7 @@ SolverTestData<Motion, Grid2D, GN_NET_EMBEDDER>::SolverTestData(std::vector<size
   settings = std::make_unique<sensors::calibration::CameraSettings>(
       std::move(calibration), std::move(photometric_calibration), std::move(vignetting), std::move(camera_mask));
   camera = std::make_unique<sensors::Camera>("camera_1", sensor, *settings, std::move(provider),
-                                             std::make_unique<dsopp::features::SobelTrackingFeaturesExtractor>(2000));
+                                             std::make_unique<dsopp::features::SobelTrackingFeaturesExtractor>());
 
   auto gt_depth_data =
       test_tools::DepthGt(TEST_DATA_DIR "track30seconds/CameraDepth", TEST_DATA_DIR "track30seconds/times.csv");
