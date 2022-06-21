@@ -3,8 +3,10 @@
 #include <memory>
 
 #include <glog/logging.h>
+
 #include "features/camera/camera_features.hpp"
 #include "features/camera/frame_embedding_extractor.hpp"
+#include "features/camera/photometrically_corrected_image.hpp"
 #include "features/camera/pixel_data_frame.hpp"
 #include "features/camera/pixel_data_frame_extractor.hpp"
 #include "features/camera/pixel_map.hpp"
@@ -15,11 +17,43 @@
 #include "semantics/semantic_filter.hpp"
 #include "sensor/synchronized_frame.hpp"
 #include "sensor/utilities.hpp"
+#include "sensors/camera_calibration/camera_calibration.hpp"
+#include "sensors/camera_calibration/mask/camera_mask.hpp"
 #include "sensors/camera_providers/camera_data_frame.hpp"
 #include "sensors/camera_providers/camera_provider.hpp"
 
 namespace dsopp {
 namespace sensors {
+namespace {
+/**
+ * Photometrically corrects and undistorts image
+ *
+ * @param image image
+ * @param photometric_calibration photometric calibration
+ * @param vignetting vignetting
+ * @param transformers transformers
+ * @param undistorter undistorter
+ * @return photometrically corrected and undistorted image
+ */
+cv::Mat photometricallyCorrectAndUndistortImage(
+    const cv::Mat &image,
+    const dsopp::sensors::calibration::CameraSettings::PhotometricCalibration &photometric_calibration,
+    const dsopp::sensors::calibration::CameraSettings::Vignetting &vignetting,
+    const std::vector<std::unique_ptr<camera_transformers::CameraTransformer>> &transformers,
+    const calibration::Undistorter &undistorter) {
+  auto width = static_cast<int>(image.cols);
+  auto height = static_cast<int>(image.rows);
+  cv::Mat image_grayscale;
+  cv::cvtColor(image, image_grayscale, cv::COLOR_BGR2GRAY);
+  std::vector<Precision> photocorrected_image_vector =
+      features::photometricallyCorrectedImage(image_grayscale, photometric_calibration, vignetting);
+  cv::Mat photocorrected_image(height, width, std::is_same_v<dsopp::Precision, double> ? CV_64FC1 : CV_32FC1,
+                               photocorrected_image_vector.data());
+  cv::Mat photocorrected_undistorted_image =
+      camera_transformers::runImageTransformers(transformers, undistorter.undistort(photocorrected_image));
+  return photocorrected_undistorted_image;
+}
+}  // namespace
 
 Camera::Camera(const std::string &name, size_t id, const calibration::CameraSettings &camera_settings,
                std::unique_ptr<providers::CameraProvider> &&provider,
@@ -39,15 +73,14 @@ Camera::Camera(const std::string &name, size_t id, const calibration::CameraSett
     pyramid_of_static_masks_.emplace_back(mask.resize(1._p / static_cast<Precision>(1 << lvl)));
   }
 
-  pixel_data_frame_extractor_ = std::make_unique<features::PixelDataFrameExtractor>(
-      camera_settings_.photometricCalibration(), camera_settings_.vignetting(),
-      calibration::CameraCalibration::kNumberOfPyramidLevels);
+  pixel_data_frame_extractor_ =
+      std::make_unique<features::PixelDataFrameExtractor>(calibration::CameraCalibration::kNumberOfPyramidLevels);
 }
 
 bool Camera::processNextDataFrame(sensors::SynchronizedFrame &frame) {
   utilities::fillNextFrame(next_frame_, next_frame_id_, next_frame_time_, *provider_);
-  auto distorted_frame = std::move(next_frame_);
-  if (!distorted_frame) {
+  auto next_frame = std::move(next_frame_);
+  if (!next_frame) {
     return false;
   }
 
@@ -59,16 +92,22 @@ bool Camera::processNextDataFrame(sensors::SynchronizedFrame &frame) {
     if (semantics_frame) {
       semantics_data =
           std::make_unique<cv::Mat>(runMaskTransformers(transformers_, undistorter.undistort(semantics_frame->data())));
-      CHECK(semantics_frame->timestamp() == distorted_frame->timestamp());
+      CHECK(semantics_frame->timestamp() == next_frame->timestamp());
     }
   }
+
+  cv::Mat image = next_frame->data();
+  cv::Mat raw_undistorted_image =
+      camera_transformers::runImageTransformers(transformers_, undistorter.undistort(image));
+  cv::Mat photocorrected_undistorted_image = photometricallyCorrectAndUndistortImage(
+      image, camera_settings_.photometricCalibration(), camera_settings_.vignetting(), transformers_, undistorter);
 
   frame.addCameraFeatures(
       this->id(),
       std::make_unique<features::CameraFeatures>(
-          distorted_frame->id(), runImageTransformers(transformers_, undistorter.undistort(distorted_frame->data())),
-          distorted_frame->timestamp(), pyramid_of_static_masks_, *tracking_feature_extractor_,
-          *pixel_data_frame_extractor_, std::move(semantics_data), semantic_filter_.get()));
+          next_frame->id(), std::move(raw_undistorted_image), std::move(photocorrected_undistorted_image),
+          next_frame->timestamp(), pyramid_of_static_masks_, *tracking_feature_extractor_, *pixel_data_frame_extractor_,
+          frame_embedding_extractor_.get(), std::move(semantics_data), semantic_filter_.get()));
   return true;
 }
 

@@ -165,10 +165,6 @@ std::optional<calibration::CameraSettings> createCameraSettings(
 
   camera_mask = calibration::CameraMask(runMaskTransformers(transformers, undistorter.undistort(camera_mask->data())));
 
-  if (!vignetting.empty()) {
-    vignetting = cv::Mat(runImageTransformers(transformers, undistorter.undistort(vignetting)));
-  }
-
   // read sematincs legend
   std::unique_ptr<semantics::SemanticLegend> semantic_legend = nullptr;
 

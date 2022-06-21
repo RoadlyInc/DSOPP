@@ -10,6 +10,7 @@
 #include "common/time/time.hpp"
 
 namespace dsopp {
+
 namespace features {
 template <int C>
 class PixelMap;
@@ -33,12 +34,9 @@ class PixelDataFrame {
   /**
    * creates PixelDataFrame from the given image
    * @param image given image
-   * @param photometric_calibration photometric calibration
-   * @param vignetting vignetting
    * @param levels number of the levels in the pyramid
    */
-  PixelDataFrame(const cv::Mat &image, const PhotometricCalibration &photometric_calibration,
-                 const Vignetting &vignetting, const size_t levels);
+  PixelDataFrame(const cv::Mat &image, const size_t levels);
 
   /**
    * method to get pyramid level of the data

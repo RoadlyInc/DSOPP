@@ -434,10 +434,7 @@ std::unique_ptr<TrackingFeaturesFrame> EigenTrackingFeaturesExtractor::extract(
   const Precision kQualityLevelForDetector = 1;
   // Note: here we construct new raw pyramids (according to DSO paper) instead of reusing photometrically corrected
   // pyramids
-  features::PixelDataFrame::PhotometricCalibration photometric_calibration;
-  std::iota(photometric_calibration.begin(), photometric_calibration.end(), 0);
-  features::PixelDataFrame pixel_frame(image, photometric_calibration, features::PixelDataFrame::Vignetting(),
-                                       features::PixelDataFrame::kMaxPyramidDepth);
+  features::PixelDataFrame pixel_frame(image, features::PixelDataFrame::kMaxPyramidDepth);
 
   std::vector<uint8_t> random_pattern(
       static_cast<size_t>(pixel_frame.getLevel(0).width() * pixel_frame.getLevel(0).height()));

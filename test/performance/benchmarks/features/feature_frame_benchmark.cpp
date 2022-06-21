@@ -38,8 +38,7 @@ struct BenchmarkData {
     for (size_t i = 0; i < 256; ++i) {
       photometric_calibration[i] = static_cast<Precision>(i);
     }
-    pixel_data_frame_extractor = std::make_unique<PixelDataFrameExtractor>(photometric_calibration, vignetting,
-                                                                           CameraCalibration::kNumberOfPyramidLevels);
+    pixel_data_frame_extractor = std::make_unique<PixelDataFrameExtractor>(CameraCalibration::kNumberOfPyramidLevels);
 
     CameraMask camera_mask(image.rows, image.cols);
     pyramid_of_masks = std::make_unique<std::vector<CameraMask>>();
@@ -47,8 +46,7 @@ struct BenchmarkData {
       auto resized_mask = camera_mask.resize(1._p / static_cast<Precision>(1 << lvl));
       pyramid_of_masks->push_back(resized_mask.data());
     }
-
-    features = std::make_unique<CameraFeatures>(0, std::move(image), dsopp::time(), *pyramid_of_masks,
+    features = std::make_unique<CameraFeatures>(0, cv::Mat(image), std::move(image), dsopp::time(), *pyramid_of_masks,
                                                 tracking_feature_extractor, *pixel_data_frame_extractor, nullptr);
   }
 
