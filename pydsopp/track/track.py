@@ -49,6 +49,7 @@ class Track:
     """
     Class for exctract data from track storage
     """
+
     def __init__(self, track_storage):
         """
         Arguments:

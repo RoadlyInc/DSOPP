@@ -23,10 +23,12 @@ class Frame:
     """
     Frame in the world
     """
+
     class AttachedFrame:
         """
         Frame attached to a keyframe (Frame)
         """
+
         def __init__(self, id_, timestamp, odometry_t_keyframe_frame):
             self.id = id_
             self.timestamp = timestamp
