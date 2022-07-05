@@ -1,0 +1,16 @@
+cmake-format
+conan
+pydot
+pydotplus
+networkx
+gdown
+pyyaml
+sympy
+scipy
+opencv-contrib-python
+yapf==0.31.0
+protobuf
+typing_extensions
+dataclasses
+laspy
+clang-format==10.0.1.1

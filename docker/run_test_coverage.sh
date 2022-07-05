@@ -55,7 +55,7 @@ docker system prune -f
 
 # BUILDING DOCKER
 
-docker image build -t dsopp:test_coverage $script_directory/$docker_OS
+docker image build -t dsopp:test_coverage --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) $script_directory/$docker_OS
 
 # RUNNING CI PIPELINE
 

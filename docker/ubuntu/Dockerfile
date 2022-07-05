@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -36,13 +36,14 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     python3-pip \
     libeigen3-dev \
     libsuitesparse-dev \
-    python3-networkx \
     git \
     && pip3 install --upgrade pip \
     && pip3 install cmake-format \
     && pip3 install conan \
     && pip3 install pydot \
     && pip3 install pydotplus \
+    && pip3 install networkx \
+    && pip3 install gdown \
     && pip3 install pyyaml \
     && pip3 install sympy \
     && pip3 install scipy \
@@ -75,9 +76,9 @@ RUN wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz \
     && cd .. \
     && rm -rf cmake*
 
-RUN wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.15.orig.tar.xz \
-    && tar xvf lcov_1.15.orig.tar.xz \
-    && cd lcov-1.15 \
+RUN wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.16.orig.tar.xz \
+    && tar xvf lcov_1.16.orig.tar.xz \
+    && cd lcov-1.16 \
     && make install \
     && cd .. \
     && rm -rf lcov*
@@ -86,7 +87,14 @@ RUN wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.15.orig.tar.xz 
 RUN cd /usr/include && ln -sf eigen3/Eigen Eigen &&  ln -sf eigen3/unsupported unsupported
 
 
-RUN mkdir /app
-WORKDIR /app
+WORKDIR /
+
+ARG USER_ID
+ARG GROUP_ID
+
+RUN addgroup --gid $GROUP_ID user
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+
+USER user
 
 CMD ["/bin/bash"]
