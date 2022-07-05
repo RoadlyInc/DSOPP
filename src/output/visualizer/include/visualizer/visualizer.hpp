@@ -3,6 +3,7 @@
 
 #include <deque>
 
+#include <GL/glew.h>
 #include <pangolin/pangolin.h>
 
 #include "energy/motion/motion.hpp"

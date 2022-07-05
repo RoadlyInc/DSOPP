@@ -35,7 +35,15 @@ set(opencv_LIBS
 
 get_target_property(glog_INCLUDE_DIRS glog INTERFACE_INCLUDE_DIRECTORIES)
 get_property(glog_lib GLOBAL PROPERTY glog_path)
+set(Glog_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}/3rd_party/src/glog_external-build/install/lib/cmake/glog/
+)
 
+get_target_property(gflags_INCLUDE_DIRS gflags INTERFACE_INCLUDE_DIRECTORIES)
+get_property(gflags_lib GLOBAL PROPERTY gflags_path)
+set(gflags_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}/3rd_party/src/gflags_external-build/install/lib/cmake/gflags/
+)
 if(NOT EXISTS ${opencv_LIBS})
   ExternalProject_Add(
     opencv_external
@@ -53,6 +61,10 @@ if(NOT EXISTS ${opencv_LIBS})
                -DCMAKE_INSTALL_PREFIX=./install
                -DGLOG_INCLUDE_DIR=${glog_INCLUDE_DIRS}
                -DGLOG_LIBRARY=${glog_lib}
+               -DGlog_DIR=${Glog_DIR}
+               -DGFLAGS_INCLUDE_DIR=${gflags_INCLUDE_DIRS}
+               -DGFLAGS_LIBRARY=${gflags_lib}
+               -DGflags_DIR=${gflags_DIR}
                -DWITH_FFMPEG=ON
                -DBUILD_PERF_TESTS=OFF
                -DBUILD_TESTS=OFF
@@ -100,7 +112,6 @@ foreach(
   opencv_surface_matching
   opencv_alphamat
   opencv_features2d
-  opencv_freetype
   opencv_fuzzy
   opencv_hfs
   opencv_img_hash

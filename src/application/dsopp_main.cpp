@@ -57,7 +57,7 @@ std::map<std::string, std::string> parseConfigArgs(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
-  gflags::SetVersionString(GIT_COMMIT_HASH);
+  google::SetVersionString(GIT_COMMIT_HASH);
   std::string usage = "Usage:\n";
   usage += argv[0];
   usage +=
@@ -68,9 +68,9 @@ int main(int argc, char *argv[]) {
       "order "
       "number (started from 0). For "
       "example --config.sensors.0.provider.start_frame=3000 ";
-  gflags::SetUsageMessage(usage);
-  gflags::AllowCommandLineReparsing();
-  gflags::ParseCommandLineFlags(&argc, &argv, false);
+  google::SetUsageMessage(usage);
+  google::AllowCommandLineReparsing();
+  google::ParseCommandLineFlags(&argc, &argv, false);
 
   auto config_args = parseConfigArgs(argc, argv);
 

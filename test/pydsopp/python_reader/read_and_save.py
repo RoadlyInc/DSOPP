@@ -8,5 +8,5 @@ sys.path.insert(
 from track_storage import TrackStorage
 
 track_storage = TrackStorage()
-track_storage.read(STORAGE_PATH + "track.bin")
-track_storage.save(STORAGE_PATH + "track_python.bin")
+track_storage.read(STORAGE_PATH + "/track.bin")
+track_storage.save(STORAGE_PATH + "/track_python.bin")
