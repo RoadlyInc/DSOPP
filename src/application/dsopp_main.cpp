@@ -88,7 +88,6 @@ int main(int argc, char *argv[]) {
   dsopp->addTrackOutputInterface(*saver);
 
 #ifdef VISUALIZATION
-  std::cout << "test" << std::endl;
   std::thread runthread;
   auto visualizer = std::make_unique<dsopp::output::Visualizer>(1920, 1080);
   if (FLAGS_visualization) {
