@@ -92,7 +92,7 @@ Do not forget to log out after running the above commands.
 Now `cd` to `docker/ubuntu/` and run the following command to build an image
 
 ```
-docker image build -t dsopp:main  --build-arg USER_ID=(id−u)−−build−argGROUPID=(id -g) .
+docker image build -t dsopp:main --build-arg USER_ID=(id−u) −−build−arg GROUPID=(id -g) .
 ```
 
 To connect to `dsopp:main` image and use gui docker should be added to xhost
