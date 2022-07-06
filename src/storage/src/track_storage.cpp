@@ -12,7 +12,11 @@ namespace {
 
 template <class ProtoMessage>
 void saveProto(std::ostream &stream, const ProtoMessage &proto_message) {
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+  unsigned message_size = static_cast<unsigned>(proto_message.ByteSizeLong());
+#else
   unsigned message_size = static_cast<unsigned>(proto_message.ByteSize());
+#endif
   stream.write(reinterpret_cast<char *>(&message_size), sizeof(unsigned));
   proto_message.SerializeToOstream(&stream);
 }

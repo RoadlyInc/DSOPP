@@ -2,6 +2,7 @@
 #define DSOPP_VISUALIZER_LOCAL_FRAME_HPP
 
 #include <Eigen/Dense>
+#include <optional>
 #include <sophus/se3.hpp>
 
 #include "common/settings.hpp"

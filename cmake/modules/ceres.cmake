@@ -9,6 +9,10 @@ find_package(Sphinx QUIET)
 
 get_target_property(glog_INCLUDE_DIRS glog INTERFACE_INCLUDE_DIRECTORIES)
 get_property(glog_lib GLOBAL PROPERTY glog_path)
+set(Glog_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}/3rd_party/src/glog_external-build/install/lib/cmake/glog/
+)
+
 get_target_property(eigen_INCLUDE_DIRS eigen INTERFACE_INCLUDE_DIRECTORIES)
 get_filename_component(eigen_cmake "${eigen_INCLUDE_DIRS}/../../share/eigen3/cmake" ABSOLUTE)
 
@@ -41,13 +45,14 @@ if (NOT EXISTS ${ceres_LIBS})
                 -DGFLAGS=OFF
                 -DGLOG_INCLUDE_DIR=${glog_INCLUDE_DIRS}
                 -DGLOG_LIBRARY=${glog_lib}
+                -Dglog_DIR=${Glog_DIR}
                 -DBUILD_EXAMPLES=OFF
                 -DEigen3_DIR=${eigen_cmake}
             TEST_COMMAND ""
             PATCH_COMMAND
                 sed -i -e "s|(4, 4, \"Eigen::Dynamic\")|(8, 1, 8)|" ${template_specialization_file_dir}${template_specialization_file} &&
                 cd ${template_specialization_file_dir} && python2 ${template_specialization_file} &&
-                cd ${ceres_find_cmake_dir} && wget https://raw.githubusercontent.com/ceres-solver/ceres-solver/master/cmake/FindTBB.cmake
+                cd ${ceres_find_cmake_dir} && rm FindTBB.cmake && wget https://raw.githubusercontent.com/ceres-solver/ceres-solver/master/cmake/FindTBB.cmake
             PREFIX 3rd_party
             EXCLUDE_FROM_ALL 1
             )

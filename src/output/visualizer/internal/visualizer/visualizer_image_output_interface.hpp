@@ -1,5 +1,7 @@
 #ifndef DSOPP_VISUALIZER_IMAGE_OUTPUT_INTERFACE_HPP
 #define DSOPP_VISUALIZER_IMAGE_OUTPUT_INTERFACE_HPP
+
+#include <GL/glew.h>
 #include <pangolin/pangolin.h>
 
 #include "output_interfaces/image_output_interface.hpp"

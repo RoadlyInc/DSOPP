@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include <GL/glew.h>
 #include <pangolin/pangolin.h>
 
 namespace dsopp {

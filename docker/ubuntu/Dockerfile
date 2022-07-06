@@ -36,13 +36,14 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     python3-pip \
     libeigen3-dev \
     libsuitesparse-dev \
-    python3-networkx \
     git \
     && pip3 install --upgrade pip \
     && pip3 install cmake-format \
     && pip3 install conan \
     && pip3 install pydot \
     && pip3 install pydotplus \
+    && pip3 install networkx \
+    && pip3 install gdown \
     && pip3 install pyyaml \
     && pip3 install sympy \
     && pip3 install scipy \
@@ -64,6 +65,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
 RUN update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-10 100
 RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 100
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 100
+RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
 
 RUN wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz \
     && tar xvf cmake-3.17.0-Linux-x86_64.tar.gz \
@@ -75,9 +77,9 @@ RUN wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz \
     && cd .. \
     && rm -rf cmake*
 
-RUN wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.15.orig.tar.xz \
-    && tar xvf lcov_1.15.orig.tar.xz \
-    && cd lcov-1.15 \
+RUN wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.16.orig.tar.xz \
+    && tar xvf lcov_1.16.orig.tar.xz \
+    && cd lcov-1.16 \
     && make install \
     && cd .. \
     && rm -rf lcov*
