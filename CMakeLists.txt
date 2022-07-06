@@ -31,6 +31,13 @@ set(CMAKE_CXX_FLAGS
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 12.0)
+    # wouldn't build on g++-12 without this
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-uninitialized -Wno-restrict"
+    )
+  endif()
+
   set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization"
   )

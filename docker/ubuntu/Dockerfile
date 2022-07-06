@@ -65,6 +65,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
 RUN update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-10 100
 RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 100
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 100
+RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
 
 RUN wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz \
     && tar xvf cmake-3.17.0-Linux-x86_64.tar.gz \

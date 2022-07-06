@@ -14,6 +14,7 @@ if (NOT EXISTS ${glog_LIBS})
                 -DCMAKE_CXX_FLAGS=-march=native
                 -DCMAKE_INSTALL_PREFIX=./install
                 -DBUILD_TESTING=OFF
+                -DWITH_GFLAGS=OFF
                 -DWITH_UNWIND=OFF
             TEST_COMMAND ""
             PREFIX 3rd_party

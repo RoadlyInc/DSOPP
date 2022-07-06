@@ -4,8 +4,10 @@
 #include <memory>
 #include <string>
 
+#include <GL/glew.h>
 #include <pangolin/pangolin.h>
 #include <pangolin/var/varvaluegeneric.h>
+
 #include "output_interfaces/text_output_interface.hpp"
 #include "visualizer/renderable.hpp"
 #include "visualizer/visualizer_output_interface.hpp"
