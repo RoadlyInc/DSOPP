@@ -69,6 +69,25 @@ Note: This package names are valid for ubuntu 18.04 and 20.04.
 
 For installation on other systems, please find the alternative name of each package above in your package manager.
 
+#### g++-10 compiler
+
+You need to install at least `g++-10` compiler. For ubuntu it could be done via:
+
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+sudo apt-get update
+sudo apt -y install g++-10
+```
+
+If you want to use it as default compiler:
+
+```
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+```
+
+Otherwise you would need to pass `-DCMAKE_CXX_COMPILER=g++-10` to cmake
+
 </details>
 
 <details>
