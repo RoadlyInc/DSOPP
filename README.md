@@ -88,6 +88,24 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
 
 Otherwise you would need to pass `-DCMAKE_CXX_COMPILER=g++-10` to cmake
 
+#### Recent cmake version
+
+It is recommended ot use one of recent [cmake versions](https://cmake.org/download/). It could be installed via:
+
+```
+wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz
+tar xvf cmake-3.17.0-Linux-x86_64.tar.gz
+cd cmake-3.17.0-Linux-x86_64 
+sudo cp -r bin /usr/
+sudo cp -r share /usr/
+sudo cp -r doc /usr/share/
+sudo cp -r man /usr/share/
+cd ..
+rm -rf cmake*
+```
+
+Note that this would overwrite you system's cmake. As an alternative you can us it directly from untared directory.
+
 </details>
 
 <details>
