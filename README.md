@@ -20,6 +20,10 @@ cd DSOPP
 <details>
 <summary>Without Docker [Not recommended]</summary>
 
+Note that this is not a recommended way to build this code.
+Even if you want to extend it and take part in a development process, many modern IDEs give you an opportunity to [develp inside a docker contatiner](https://code.visualstudio.com/docs/remote/containers).
+This section is more of an outline of the build process. If you encounter any problems please open an issue.
+
 Be sure that `python3` is installed on your machine.
 
 #### Using python virtual evironment [recommended]
@@ -67,6 +71,12 @@ apt install wget ffmpeg libeigen3-dev libsuitesparse-dev lcov python2
 
 Note: This package names are valid for ubuntu 18.04 and 20.04.
 
+To use `clang-format-10` as `clang-format` add following to your `.bashrc` file:
+
+```
+alias clang-format='clang-fromat-10'
+```
+
 For installation on other systems, please find the alternative name of each package above in your package manager.
 
 #### g++-10 compiler
@@ -79,14 +89,7 @@ sudo apt-get update
 sudo apt -y install g++-10
 ```
 
-If you want to use it as default compiler:
-
-```
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
-```
-
-Otherwise you would need to pass `-DCMAKE_CXX_COMPILER=g++-10` to cmake
+You would need to pass `-DCMAKE_CXX_COMPILER=g++-10` to cmake
 
 #### Recent cmake version
 
