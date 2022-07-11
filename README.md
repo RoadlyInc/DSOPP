@@ -141,7 +141,7 @@ xhost local:docker
 And following command to open shell inside `dsopp:main` image in the current directory:
 
 ```
-docker run --rm -it -v /tmp/.X11-unix:/tmp/.X11-unix -e HOME=HOME−eDISPLAY=DISPLAY -w (pwd)−vHOME:$HOME --device=/dev/dri:/dev/dri -it dsopp:main bash
+docker run --rm -it -v /tmp/.X11-unix:/tmp/.X11-unix -e HOME=HOME−eDISPLAY=DISPLAY -w (pwd) −v HOME:$HOME --device=/dev/dri:/dev/dri -it dsopp:main bash
 ```
 
 </details>
