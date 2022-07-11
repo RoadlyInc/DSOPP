@@ -160,6 +160,8 @@ cmake .. -DCMAKE_BUILD_TYPE=Release;
 make -j;
 ```
 
+Remember passing `-DCMAKE_CXX_COMPILER=g++-10` to cmake if your default compiler version is less than 10.
+
 ##### Download test data
 To run tests test data should be downloaded
 
