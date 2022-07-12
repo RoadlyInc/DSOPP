@@ -9,7 +9,7 @@ sympy
 scipy
 opencv-contrib-python
 yapf==0.31.0
-protobuf
+protobuf==3.18.0
 typing_extensions
 dataclasses
 laspy

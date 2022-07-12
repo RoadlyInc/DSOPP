@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     && pip3 install scipy \
     && pip3 install opencv-contrib-python \
     && pip3 install yapf==0.31.0 \
-    && pip3 install protobuf \
+    && pip3 install protobuf==3.18.0 \
     && pip3 install typing_extensions \
     && pip3 install dataclasses \
     && pip3 install laspy \
