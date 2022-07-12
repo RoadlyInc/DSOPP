@@ -8,7 +8,7 @@ for commercial use and additional functionality contact Roadly (en@road.ly)
 
 ## Building DSOPP
 
-First of all, you need to clone this repository
+You need to clone this repositor first.
 
 ```
 git clone git@github.com:RoadlyInc/DSOPP.git
@@ -19,6 +19,10 @@ cd DSOPP
 
 <details>
 <summary>Without Docker [Not recommended]</summary>
+
+Note that this is not a recommended way to build this code.
+Even if you want to extend it and take part in a development process, many modern IDEs give you an opportunity to [develp inside a docker contatiner](https://code.visualstudio.com/docs/remote/containers).
+This section is more of an outline of the build process. If you encounter any problems please open an issue.
 
 Be sure that `python3` is installed on your machine.
 
@@ -67,7 +71,43 @@ apt install wget ffmpeg libeigen3-dev libsuitesparse-dev lcov python2
 
 Note: This package names are valid for ubuntu 18.04 and 20.04.
 
+To use `clang-format-10` as `clang-format` add following to your `.bashrc` file:
+
+```
+alias clang-format='clang-fromat-10'
+```
+
 For installation on other systems, please find the alternative name of each package above in your package manager.
+
+#### g++-10 compiler
+
+You need to install at least `g++-10` compiler. For ubuntu it could be done via:
+
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+sudo apt-get update
+sudo apt -y install g++-10
+```
+
+You would need to pass `-DCMAKE_CXX_COMPILER=g++-10` to cmake
+
+#### Recent cmake version
+
+It is recommended ot use one of recent [cmake versions](https://cmake.org/download/). It could be installed via:
+
+```
+wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz
+tar xvf cmake-3.17.0-Linux-x86_64.tar.gz
+cd cmake-3.17.0-Linux-x86_64 
+sudo cp -r bin /usr/
+sudo cp -r share /usr/
+sudo cp -r doc /usr/share/
+sudo cp -r man /usr/share/
+cd ..
+rm -rf cmake*
+```
+
+Note that this would overwrite you system's cmake. As an alternative you can us it directly from untared directory.
 
 </details>
 
@@ -88,11 +128,11 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
 
-Do not forget to log out after running the above commands.
+Log out after running the above commands.
 Now `cd` to `docker/ubuntu/` and run the following command to build an image
 
 ```
-docker image build -t dsopp:main --build-arg USER_ID=(id−u) −−build−arg GROUPID=(id -g) .
+docker image build -t dsopp:main --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .
 ```
 
 To connect to `dsopp:main` image and use gui docker should be added to xhost
@@ -104,7 +144,7 @@ xhost local:docker
 And following command to open shell inside `dsopp:main` image in the current directory:
 
 ```
-docker run --rm -it -v /tmp/.X11-unix:/tmp/.X11-unix -e HOME=HOME−eDISPLAY=DISPLAY -w (pwd)−vHOME:$HOME --device=/dev/dri:/dev/dri -it dsopp:main bash
+docker run --rm -it -v /tmp/.X11-unix:/tmp/.X11-unix -e HOME=$HOME -e DISPLAY=$DISPLAY -w $(pwd) -v $HOME:$HOME --device=/dev/dri:/dev/dri -it dsopp:main bash
 ```
 
 </details>
@@ -119,6 +159,8 @@ cd build;
 cmake .. -DCMAKE_BUILD_TYPE=Release;
 make -j;
 ```
+
+Remember passing `-DCMAKE_CXX_COMPILER=g++-10` to cmake if your default compiler version is less than 10.
 
 ##### Download test data
 To run tests test data should be downloaded
