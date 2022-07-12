@@ -54,7 +54,7 @@ Now depending on your shell settings, you might see `(e) dsopp_venv` in your ter
 From the root of this repository run:
 
 ```
-pip3 -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 #### system dependencies
