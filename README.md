@@ -8,7 +8,7 @@ for commercial use and additional functionality contact Roadly (en@road.ly)
 
 ## Building DSOPP
 
-First of all, you need to clone this repository
+You need to clone this repositor first.
 
 ```
 git clone git@github.com:RoadlyInc/DSOPP.git
@@ -128,7 +128,7 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
 
-Do not forget to log out after running the above commands.
+Log out after running the above commands.
 Now `cd` to `docker/ubuntu/` and run the following command to build an image
 
 ```
