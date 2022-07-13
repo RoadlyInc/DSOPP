@@ -24,7 +24,12 @@ if __name__ == "__main__":
                         dest='output',
                         required=True,
                         help='output directory path')
+    parser.add_argument('--pose_mode',
+                        dest='pose_mode',
+                        default='odometry',
+                        help='Output poses `ecef` or `odometry`')
+
     args = parser.parse_args()
 
     tracks = [read_track(track_path) for track_path in args.track]
-    colmap_track_export(tracks, args.output)
+    colmap_track_export(tracks, args.output, args.pose_mode)

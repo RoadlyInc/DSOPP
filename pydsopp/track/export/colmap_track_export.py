@@ -5,7 +5,7 @@ from pathlib import Path
 from scipy.spatial import cKDTree
 from dataclasses import dataclass
 
-from ..camera_calibration import Pinhole, CameraCalibration
+from ..camera_calibration import Pinhole
 
 
 class Point3D:
@@ -33,7 +33,7 @@ class Frame:
     """
     @dataclass
     class Point2D:
-        pixel: np.array
+        pixel: np.ndarray
         index: int
         point3d_index: int
 
@@ -64,7 +64,7 @@ class Frame:
         """
         Populate ``self.points2d`` array with projected onto ``self.depth_map`` points
         """
-        for pixel, point3d_dist, point3d_index in self.depth_map.values():
+        for pixel, _, point3d_index in self.depth_map.values():
             point2d_idx = len(self.points2d)
             self.points2d.append(
                 Frame.Point2D(pixel, point2d_idx, point3d_index))
@@ -125,21 +125,27 @@ def points3D_txt(points, filename):
                 f.write(head + " ".join(track_str) + "\n")
 
 
-def build_by_pointcloud(tracks, min_relative_bs, max_idepth_variance):
+def build_by_pointcloud(tracks, pose_mode, min_relative_bs,
+                        max_idepth_variance):
     pointcloud = []
     cloud_pts = []
 
     print("Cloud transformation :")
-    print("Quaternion: ", tracks[0].t_earth_local.quaternion())
-    print("Translation :", tracks[0].t_earth_local.translation())
+    if pose_mode == 'ecef':
+        print("Quaternion: ", tracks[0].t_earth_local.quaternion())
+        print("Translation :", tracks[0].t_earth_local.translation())
 
     for track_i, track in enumerate(tracks):
         colors = track.get_image_colors()
         for frame, frame_colors in tqdm(zip(track.frames, colors),
                                         "Extracting cloud",
                                         total=len(track.frames)):
-            t_world_frame = track.t_earth_local.inverse(
-            ) @ frame.ecef_t_world_frame
+            if pose_mode == 'ecef':
+                t_world_frame = track.t_earth_local.inverse(
+                ) @ frame.ecef_t_world_frame
+            else:
+                t_world_frame = frame.odometry_t_world_frame
+
             for landmark, color in zip(frame.landmarks, frame_colors):
                 if not landmark.confident(min_relative_bs,
                                           max_idepth_variance):
@@ -162,12 +168,15 @@ def build_by_pointcloud(tracks, min_relative_bs, max_idepth_variance):
         for frame in tqdm(track.frames,
                           "Projecting points",
                           total=len(track.frames)):
-            t_world_frame = track.t_earth_local.inverse(
-            ) @ frame.ecef_t_world_frame
+            if pose_mode == 'ecef':
+                t_world_frame = track.t_earth_local.inverse(
+                ) @ frame.ecef_t_world_frame
+            else:
+                t_world_frame = frame.odometry_t_world_frame
             t_frame_world = t_world_frame.inverse()
 
             nearest_point_ids = pointcloud_tree.query_ball_point(
-                t_world_frame.translation(), search_radius)
+                t_world_frame.translation(), search_radius, p=2)
 
             colmap_frame = Frame(frame_id, t_world_frame,
                                  f"images/{image_name(track_i, frame)}")
@@ -194,17 +203,19 @@ def build_by_pointcloud(tracks, min_relative_bs, max_idepth_variance):
 
 def colmap_track_export(tracks,
                         sparse_reconstruction_path,
+                        pose_mode,
                         min_relative_bs=0.15,
                         max_idepth_variance=1e-8):
     """
     Arguments:
         tracks -- parsed ``track.bin`` files
         sparse_reconstruction_path -- path to save `images.txt`, `cameras.txt`, `points3D.txt` and `images/`
+        pose_mode -- either `ecef` if there are gnss aligned poses, `odometry` otherwise
         min_relative_bs -- minimal relative baseline threshold (if greater then accept)
         max_idepth_variance -- max idepth variance threshold (if less then accept)
     """
     for track in tracks:
-        if not track.valid_localization:
+        if pose_mode == 'ecef' and not track.valid_localization:
             print("Invalid ecef poses in one of tracks")
             exit(0)
 
@@ -221,7 +232,8 @@ def colmap_track_export(tracks,
         else:
             print(f"Images were not saved in track.bin for {track_i}")
 
-    colmap_frames, pointcloud = build_by_pointcloud(tracks, min_relative_bs,
+    colmap_frames, pointcloud = build_by_pointcloud(tracks, pose_mode,
+                                                    min_relative_bs,
                                                     max_idepth_variance)
 
     print("Dumping images.txt")
