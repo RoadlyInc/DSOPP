@@ -11,8 +11,10 @@ from ..storage.track_storage import TrackStorage
 
 GLOBAL_R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
 
+
 def frame_image_name(frame):
     return f'{frame.id}.png'
+
 
 def variance_of_laplacian(image):
     return cv2.Laplacian(image, cv2.CV_64F).var()
@@ -100,7 +102,7 @@ if __name__ == "__main__":
         cv2.imwrite(args.output + '/' + file_path, image)
 
         pose = odometry_poses[frame_id].matrix()
-        
+
         motion = np.eye(4)
         motion[:3, :3] = GLOBAL_R
         pose = motion @ pose
@@ -111,7 +113,6 @@ if __name__ == "__main__":
         pose[0:3, 1] *= -1
         pose = pose[[1, 0, 2, 3], :]
         pose[2, :] *= -1
-        
 
         frame_json = {
             "file_path": file_path,

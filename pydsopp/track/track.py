@@ -52,15 +52,18 @@ class Track:
             self.main_sensor_id].model_type)
         self.camera_calibration = CameraCalibration(intrinsics, image_size,
                                                     model_type)
-        
+
         if self.valid_localization:
             self.t_earth_local = sim3_from_parameters(
                 self.track.ecef_poses.t_earth_local)
 
             self.ecef_poses = list(
-                map(lambda data: self.t_earth_local @ sim3_from_parameters(data), [
-                    pose.data for pose in self.track.ecef_poses.t_local_keyframes
-                ]))
+                map(
+                    lambda data: self.t_earth_local @ sim3_from_parameters(
+                        data), [
+                            pose.data
+                            for pose in self.track.ecef_poses.t_local_keyframes
+                        ]))
 
         self.odometry_poses = list(
             map(se3_from_parameters,
