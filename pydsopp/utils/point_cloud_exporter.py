@@ -110,7 +110,7 @@ if __name__ == "__main__":
         save_pc = open(args.output, 'w')
         for point_data in points_data:
             point = point_data[:3]
-            color = point_data[3:6]
+            color = point_data[3:6].astype(int)
             save_pc.write(
                 f'{",".join(map(str, point.tolist() + color.tolist()))}\n')
         save_pc.close()

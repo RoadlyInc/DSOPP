@@ -207,6 +207,7 @@ To view it use `viewer_main` application
 
 ### [Extending DSOPP](docs/extending_dsopp.md)
 
+### [DSOPP python utils](docs/pydsopp_utilities.md)
 <!---
 ### Python library only build
 
