@@ -46,11 +46,11 @@ The research purpose of this software is twofold. Firstly, it provides researche
 
 Compared to the original implementation we propose following improvements:
 
-- *Modularity*. Original DSO consists of a few source files with extensive code duplication. For example, the code responsible for ray reprojection can be found in 30-50 different places. It not only makes the development process error prone but also makes the code extremely hard to modify. However, for some followup papers, this chunk of code was the only change (rolling shutter DSO[@schubert2018direct], omniderectional DSO[@omni]). In our implementation, code is organized in a way that those kinds of contributions would require only a single modification. 
+- **Modularity**. Original DSO consists of a few source files with extensive code duplication. For example, the code responsible for ray reprojection can be found in 30-50 different places. It not only makes the development process error prone but also makes the code extremely hard to modify. However, for some followup papers, this chunk of code was the only change (rolling shutter DSO[@schubert2018direct], omniderectional DSO[@omni]). In our implementation, code is organized in a way that those kinds of contributions would require only a single modification. 
 
-- *Tests*. Every module in our implementation is covered with a test. Tests not only insure the validity of the code but also declare the essence of this module and show their usage. There are not tests in the original DSO.
+- **Tests**. Every module in our implementation is covered with a test. Tests not only insure the validity of the code but also declare the essence of this module and show their usage. There are not tests in the original DSO.
 
-- *Extensibility*. functionality of every followup research have been or can be developed within our framework. It can be turned on or off dynamically based on the configuration file. It prevents duplication of code among several repositories which insures every contribution affects previous and following contributions. 
+- **Extensibility**. functionality of every followup research have been or can be developed within our framework. It can be turned on or off dynamically based on the configuration file. It prevents duplication of code among several repositories which insures every contribution affects previous and following contributions. 
 
 
 
