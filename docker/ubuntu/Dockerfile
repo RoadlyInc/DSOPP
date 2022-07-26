@@ -55,7 +55,6 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     && pip3 install typing_extensions \
     && pip3 install dataclasses \
     && pip3 install laspy \
-    && pip3 install gdown \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
