@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     && pip3 install typing_extensions \
     && pip3 install dataclasses \
     && pip3 install laspy \
+    && pip3 install opencv-python \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -97,6 +98,8 @@ ARG GROUP_ID
 
 RUN addgroup --gid $GROUP_ID user
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+RUN usermod -aG sudo user
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER user
 
