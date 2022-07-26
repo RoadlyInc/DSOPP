@@ -37,6 +37,8 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     libeigen3-dev \
     libsuitesparse-dev \
     git \
+    zip \
+    unzip \
     && pip3 install --upgrade pip \
     && pip3 install cmake-format \
     && pip3 install conan \
