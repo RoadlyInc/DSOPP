@@ -50,7 +50,7 @@ Compared to the original implementation we propose following improvements:
 
 - **Tests**. Every module in our implementation is covered with a test. Tests not only insure the validity of the code but also declare the essence of this module and show their usage. There are no tests in the original DSO.
 
-- **Extensibility**. Functionality of every follow-up research have been or can be developed within our framework. It can be turned on or off dynamically based on the configuration file. It prevents duplication of code among several repositories which insures every contribution affects previous and following contributions. 
+- **Extensibility**. Functionality of every follow-up research has been or can be developed within our framework. It can be turned on or off dynamically based on the configuration file. It prevents duplication of code among several repositories which insures every contribution affects previous and following contributions.
 
 
 
