@@ -20,6 +20,7 @@ target_link_libraries(
                      output_persistent glog tbb)
 
 if(VISUALIZATION)
+  add_compile_definitions(VISUALIZATION)
   add_executable(viewer_main viewer_main.cpp)
   target_link_libraries(viewer_main PRIVATE track visualizer application_tools
                                             sensors)
