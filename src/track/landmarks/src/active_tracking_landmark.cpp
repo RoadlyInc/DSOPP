@@ -59,7 +59,7 @@ void ActiveTrackingLandmark::marginalize() {
     this->markOutlier();
   }
   is_marginalized_ = true;
-  patch_.release();
+  patch_.reset();
 }
 
 bool ActiveTrackingLandmark::isMarginalized() const { return is_marginalized_; }
