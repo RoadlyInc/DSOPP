@@ -26,25 +26,6 @@ def extract_landmarks(landmarks):
     return result_landmarks
 
 
-def extract_landmarks(landmarks):
-    """
-        convert proto landmarks to list of ``Landmark``s
-    """
-    result_landmarks = []
-
-    for landmark in landmarks:
-        projection = np.array([landmark.projection_x, landmark.projection_y])
-        direction = np.array(
-            [landmark.direction_x, landmark.direction_y, landmark.direction_z])
-
-        result_landmarks.append(
-            Landmark(projection, direction, landmark.idepth,
-                     landmark.idepth_variance, landmark.relative_baseline,
-                     landmark.semantic_type_id))
-
-    return result_landmarks
-
-
 class Track:
     """
     Class for exctract data from track storage
@@ -72,13 +53,17 @@ class Track:
         self.camera_calibration = CameraCalibration(intrinsics, image_size,
                                                     model_type)
 
-        self.t_earth_local = sim3_from_parameters(
-            self.track.ecef_poses.t_earth_local)
+        if self.valid_localization:
+            self.t_earth_local = sim3_from_parameters(
+                self.track.ecef_poses.t_earth_local)
 
-        self.ecef_poses = list(
-            map(lambda data: self.t_earth_local @ sim3_from_parameters(data), [
-                pose.data for pose in self.track.ecef_poses.t_local_keyframes
-            ]))
+            self.ecef_poses = list(
+                map(
+                    lambda data: self.t_earth_local @ sim3_from_parameters(
+                        data), [
+                            pose.data
+                            for pose in self.track.ecef_poses.t_local_keyframes
+                        ]))
 
         self.odometry_poses = list(
             map(se3_from_parameters,

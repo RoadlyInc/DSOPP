@@ -13,6 +13,7 @@ set(LIST_OF_COPYED_FILES
     utils/point_cloud_exporter.py
     utils/track2json.py
     utils/track2colmap.py
+    utils/nerf_exporter.py
     track/track.py
     transformations/utils.py
     transformations/__init__.py
