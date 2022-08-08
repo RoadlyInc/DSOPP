@@ -193,7 +193,7 @@ naviagate to ./test/test_data/tummono/
 sh download_data.sh (sequence id)
 
 navigate to .
-./build/src/application/dsopp_main --config_file_path ./test/test_data/tummono/mono.yaml
+./build/src/application/dsopp_main --config_file_path ./test/test_data/tummono/sequence_<id>/standart.yaml
 ```
 
 `dsopp_main` outputs `track.bin` file. This is the whole track output with points and all frame poses.
