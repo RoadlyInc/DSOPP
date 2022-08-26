@@ -72,7 +72,7 @@ class TUMFovModel : public CameraModelBase {
   bool project(const Eigen::Vector<Scalar, 3> &ray_, Eigen::Vector<Scalar, 2> &point) const {
     Scalar r_u = ray_.template head<2>().norm();
     if (r_u < Scalar(1e-8)) {
-      point = principal_point_;
+      point = principal_point_.template cast<Scalar>();
       return true;
     }
     Scalar r_d = atan2(2 * r_u * tan(fov_ / 2), ray_(2)) / fov_;
