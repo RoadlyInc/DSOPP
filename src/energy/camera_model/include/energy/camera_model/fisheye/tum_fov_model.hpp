@@ -18,7 +18,7 @@ template <typename T = Precision>
 class TUMFovModel : public CameraModelBase {
  public:
   /** Type of the model */
-  static ModelType constexpr Type = ModelType::kPinholeCamera;
+  static ModelType constexpr Type = ModelType::kTumFovCamera;
   /** alias to the base class with template */
   template <typename Scalar>
   using CastT = TUMFovModel<Scalar>;
@@ -28,8 +28,9 @@ class TUMFovModel : public CameraModelBase {
 
   /**
    * @param image_size image size
-   * @param focal_length focal length
+   * @param focal_lengths focal length
    * @param principal_point principal point
+   * @param fov field of view
    * @param shutter_time shutter capture time
    * @param scale camera model scale
    */
@@ -65,13 +66,13 @@ class TUMFovModel : public CameraModelBase {
    *
    * @param ray_  ray to project to 2d point
    * @param point output value
-   * @return bool if proejction was successful
+   * @return bool if projection was successful
    */
   template <class Scalar>
   bool project(const Eigen::Vector<Scalar, 3> &ray_, Eigen::Vector<Scalar, 2> &point) const {
     Scalar r_u = ray_.template head<2>().norm();
     if (r_u < Scalar(1e-8)) {
-      point.setZero();
+      point = principal_point_;
       return true;
     }
     Scalar r_d = atan2(2 * r_u * tan(fov_ / 2), ray_(2)) / fov_;
@@ -86,7 +87,7 @@ class TUMFovModel : public CameraModelBase {
    * @tparam Scalar scalar type
    * @param point_ 2d point to project to ray
    * @param ray output value
-   * @return bool if proejction was successful
+   * @return bool if projection was successful
    */
   template <class EigenDerived, class Scalar>
   bool unproject(const Eigen::MatrixBase<EigenDerived> &point_, Eigen::Vector<Scalar, 3> &ray) const {
