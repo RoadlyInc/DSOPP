@@ -24,4 +24,4 @@ jobs:
       - name: Download test data
         run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app/test; sh download_test_data.sh"
       - name: Build 
-        run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app;  cmake .. -DCMAKE_BUILD_TYPE=Release -DCOMPILE_HIDDEN_CODE=OFF -DLTO_OPTIMIZATION=ON -Bbuild && cmake --build build -- -j4; ctest"
+        run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app;  cmake . -DCMAKE_BUILD_TYPE=Release -DCOMPILE_HIDDEN_CODE=OFF -DLTO_OPTIMIZATION=ON -Bbuild && cmake --build build -- -j4 && cd build && ctest"
