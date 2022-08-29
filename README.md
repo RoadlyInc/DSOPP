@@ -205,6 +205,8 @@ To view it use `viewer_main` application
 
 ### [Running on own dataset](docs/running_on_own_dataset.md)
 
+### [Development notes](docs/development notes.md)
+
 ### [Extending DSOPP](docs/extending_dsopp.md)
 
 ### [DSOPP python utils](docs/pydsopp_utilities.md)
