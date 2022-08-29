@@ -17,11 +17,10 @@ jobs:
   docker: 
     - uses: actions/checkout@v3
       name: Build image
-      run: docker buildx build --push \
-      --tag dsopp-latest -f $GITHUB_WORKSPACE/docker/ubuntu/Dockerfile .
+      run: docker buildx build --push --tag dsopp-latest -f $GITHUB_WORKSPACE/docker/ubuntu/Dockerfile .
 
   download:
-    - name: Download test data
+    -name: Download test data
     run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app/test; sh download_test_data.sh"
 
   build-test:
