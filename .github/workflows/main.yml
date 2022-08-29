@@ -20,7 +20,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: Build image
-        run: docker buildx build --push --tag dsopp-latest -f $GITHUB_WORKSPACE/docker/ubuntu/Dockerfile .
+        run: docker buildx build --push --tag dsopp-latest --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -f $GITHUB_WORKSPACE/docker/ubuntu/Dockerfile .
       - name: Download test data
         run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app/test; sh download_test_data.sh"
       - name: Build 
