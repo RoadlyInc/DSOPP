@@ -14,18 +14,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker: 
-    - uses: actions/checkout@v3
-      name: Build image
-      run: docker buildx build --push --tag dsopp-latest -f $GITHUB_WORKSPACE/docker/ubuntu/Dockerfile .
-
-  download:
-    -name: Download test data
-    run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app/test; sh download_test_data.sh"
-
-  build-test:
-    runs-on: ubuntu-latest
-    name: Build & Test
+  build-gcc-test:
+    runs-on: ubuntu-latest 
     steps:
+      - name: Build image
+        uses: actions/checkout@v3
+        run: docker buildx build --push --tag dsopp-latest -f $GITHUB_WORKSPACE/docker/ubuntu/Dockerfile .
+      - name: Download test data
+        run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app/test; sh download_test_data.sh"
       - name: Build 
         run: docker run -v "$GITHUB_WORKSPACE:/app" -i dsopp-latest bash -c "cd app;  cmake .. -DCMAKE_BUILD_TYPE=Release -DCOMPILE_HIDDEN_CODE=OFF -DLTO_OPTIMIZATION=ON -Bbuild && cmake --build build -- -j4; ctest"
