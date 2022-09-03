@@ -67,8 +67,9 @@ bool Camera::processNextDataFrame(sensors::SynchronizedFrame &frame) {
       this->id(),
       std::make_unique<features::CameraFeatures>(
           distorted_frame->id(), runImageTransformers(transformers_, undistorter.undistort(distorted_frame->data())),
-          distorted_frame->timestamp(), pyramid_of_static_masks_, *tracking_feature_extractor_,
-          *pixel_data_frame_extractor_, std::move(semantics_data), semantic_filter_.get()));
+          distorted_frame->exposureTime(), distorted_frame->timestamp(), pyramid_of_static_masks_,
+          *tracking_feature_extractor_, *pixel_data_frame_extractor_, std::move(semantics_data),
+          semantic_filter_.get()));
   return true;
 }
 

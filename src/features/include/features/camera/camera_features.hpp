@@ -40,13 +40,14 @@ class CameraFeatures {
    *
    * @param frame_id frame identifier
    * @param raw_image raw image loaded by data provider
+   * @param exposure_time exposure time
    * @param time time when sensor captured data
    * @param pyramid_of_static_masks pyramid of static camera masks at the current time
    * @param tracking_features_extractor, pixel_data_frame_extractor,
    * @param semantics_data semantics data
    * @param semantic_filter filter legend (if exists, may be nullptr)
    */
-  CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, const time time,
+  CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, const Precision exposure_time, const time time,
                  const std::vector<sensors::calibration::CameraMask>& pyramid_of_static_masks,
                  features::TrackingFeaturesExtractor& tracking_features_extractor,
                  const features::PixelDataFrameExtractor& pixel_data_frame_extractor,
@@ -76,6 +77,10 @@ class CameraFeatures {
    * @return frame data
    */
   const cv::Mat& frameData() const;
+  /**
+   * @return exposure time
+   */
+  Precision exposureTime() const;
   /**
    * moves semantics data
    * @return moved semantic data
@@ -113,6 +118,8 @@ class CameraFeatures {
   cv::Mat raw_image_;
   /** frame data. */
   cv::Mat frame_data_;
+  /** exposure time. */
+  const Precision exposure_time_;
   /** time of the frame. */
   time time_;
   /** camera mask at the current time. */

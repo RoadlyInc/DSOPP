@@ -13,7 +13,8 @@
 
 namespace dsopp {
 namespace features {
-CameraFeatures::CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, const time time,
+CameraFeatures::CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, const Precision exposure_time,
+                               const time time,
                                const std::vector<sensors::calibration::CameraMask>& pyramid_of_static_masks,
                                features::TrackingFeaturesExtractor& tracking_features_extractor,
                                const features::PixelDataFrameExtractor& pixel_data_frame_extractor,
@@ -21,6 +22,7 @@ CameraFeatures::CameraFeatures(const size_t frame_id, cv::Mat&& raw_image, const
                                const semantics::SemanticFilter* semantic_filter)
     : frame_id_(frame_id),
       raw_image_(std::move(raw_image)),
+      exposure_time_(exposure_time),
       time_(time),
       pyramid_of_static_masks_(pyramid_of_static_masks),
       tracking_features_extractor_(tracking_features_extractor),
@@ -47,6 +49,8 @@ const features::PixelDataFrame& CameraFeatures::pixelData() {
 const cv::Mat& CameraFeatures::image() const { return raw_image_; }
 
 const cv::Mat& CameraFeatures::frameData() const { return frame_data_; }
+
+Precision CameraFeatures::exposureTime() const { return exposure_time_; }
 
 std::unique_ptr<cv::Mat> CameraFeatures::moveSemanticsData() { return std::move(semantics_data_); }
 
