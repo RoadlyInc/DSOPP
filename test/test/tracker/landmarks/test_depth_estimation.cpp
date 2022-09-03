@@ -190,7 +190,7 @@ void depthEstimationTestBody(const size_t numberOfKeyframes) {
       }
 
       tracker::DepthEstimation::estimate<typename Motion::Product, features::PixelMap, Model, 1>(
-          target_grid, landmarks, gt_cam1_agent.inverse(), Eigen::Vector2<Precision>::Zero(),
+          target_grid, landmarks, gt_cam1_agent.inverse(), 1, Eigen::Vector2<Precision>::Zero(), 1,
           Eigen::Vector2<Precision>::Zero(), camera.calibration(), camera.pyramidOfMasks()[0], 9);
 
       updateLocalLandmarks(local_immature_landmarks, odometry_track.lastKeyframe().immatureLandmarks(sensor));

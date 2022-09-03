@@ -35,7 +35,8 @@ class DepthEstimation {
    * @param target_frame pixel maps of the target frame
    * @param reference_landmarks vector of reference camera landmarks
    * @param t_t_r  transform for the second camera relative to the first one (reference to live relative)
-   * @param reference_affine_brightness,target_affine_brightness affine brigtensses
+   * @param reference_exposure_time, target_exposure_time exposure times
+   * @param reference_affine_brightness, target_affine_brightness affine brightnesses
    * @param calibration camera calibration
    * @tparam Grid2D 2D grid to evaluate data
    * @tparam Calibration camera calibration
@@ -48,7 +49,8 @@ class DepthEstimation {
   static void estimate(
       const Grid2D<C> &target_frame,
       std::vector<std::reference_wrapper<track::landmarks::ImmatureTrackingLandmark>> &reference_landmarks,
-      const MotionProduct &t_t_r, const Eigen::Vector2<Precision> &reference_affine_brightness,
+      const MotionProduct &t_t_r, const Precision reference_exposure_time,
+      const Eigen::Vector2<Precision> &reference_affine_brightness, const Precision target_exposure_time,
       const Eigen::Vector2<Precision> &target_affine_brightness,
       const sensors::calibration::CameraCalibration &calibration, const sensors::calibration::CameraMask &camera_mask,
       const Precision sigma_huber_loss);

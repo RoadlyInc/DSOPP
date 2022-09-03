@@ -82,9 +82,13 @@ Eigen::Vector3<uint8_t> getColor(const LandmarkType &landmark, bool color_by_lan
 }
 }  // namespace
 template <energy::motion::Motion Motion>
-Frame<Motion>::Frame(size_t frame_id, time timestamp, const Motion &tWorldAgent,
+Frame<Motion>::Frame(size_t frame_id, time timestamp, const Motion &tWorldAgent, const Precision exposure_time,
                      const Eigen::Vector<Precision, 2> &affine_brightness)
-    : id_(frame_id), timestamp_(timestamp), tWorldAgent_(tWorldAgent), affine_brightness_(affine_brightness) {}
+    : id_(frame_id),
+      timestamp_(timestamp),
+      tWorldAgent_(tWorldAgent),
+      exposure_time_(exposure_time),
+      affine_brightness_(affine_brightness) {}
 
 template <energy::motion::Motion Motion>
 const Motion &Frame<Motion>::tWorldAgent() const {
@@ -99,6 +103,11 @@ time Frame<Motion>::timestamp() const {
 template <energy::motion::Motion Motion>
 size_t Frame<Motion>::id() const {
   return id_;
+}
+
+template <energy::motion::Motion Motion>
+Precision Frame<Motion>::exposureTime() const {
+  return exposure_time_;
 }
 
 template <energy::motion::Motion Motion>

@@ -35,9 +35,10 @@ class ActiveOdometryTrack : public OdometryTrackBase<Motion> {
    * @param id frame id
    * @param timestamp time of the capture
    * @param t_world_agent pose of the agent
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    */
-  void pushFrame(size_t id, time timestamp, const Motion& t_world_agent,
+  void pushFrame(size_t id, time timestamp, const Motion& t_world_agent, const Precision exposure_time = 1,
                  const Eigen::Vector2<Precision>& affine_brightness = Eigen::Vector2<Precision>::Zero());
   /**
    * get all keyframes

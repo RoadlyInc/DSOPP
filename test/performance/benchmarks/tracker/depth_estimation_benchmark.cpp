@@ -114,8 +114,8 @@ static void DepthEstimatorBehcnmark(benchmark::State& state) {
     auto& landmarks = data.getLandmarks();
     state.ResumeTiming();
     tracker::DepthEstimation::estimate<SE3, features::PixelMap, Model, 1>(
-        *data.target_grid, landmarks, data.t_t_r, Eigen::Vector2<Precision>::Zero(), Eigen::Vector2<Precision>::Zero(),
-        data.data->camera->calibration(), data.data->camera->pyramidOfMasks()[0], 9);
+        *data.target_grid, landmarks, data.t_t_r, 1, Eigen::Vector2<Precision>::Zero(), 1,
+        Eigen::Vector2<Precision>::Zero(), data.data->camera->calibration(), data.data->camera->pyramidOfMasks()[0], 9);
   }
 }
 BENCHMARK(DepthEstimatorBehcnmark)->Unit(benchmark::kMillisecond);

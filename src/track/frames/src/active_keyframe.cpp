@@ -35,8 +35,9 @@ size_t ActiveKeyframe<Motion>::keyframeId() const {
 
 template <energy::motion::Motion Motion>
 ActiveKeyframe<Motion>::ActiveKeyframe(size_t id, size_t keyframe_id, time timestamp, const Motion &tWorldAgent,
+                                       const Precision exposure_time,
                                        const Eigen::Vector<Precision, 2> &affine_brightness)
-    : Frame<Motion>(id, timestamp, tWorldAgent, affine_brightness),
+    : Frame<Motion>(id, timestamp, tWorldAgent, exposure_time, affine_brightness),
       keyframe_id_(keyframe_id),
       is_marginalized_(false) {}
 
@@ -70,14 +71,12 @@ void ActiveKeyframe<Motion>::setAffineBrightness(const Eigen::Vector<Precision, 
 }
 
 template <energy::motion::Motion Motion>
-void ActiveKeyframe<Motion>::attachTrackingFrame(size_t id, time timestamp,
-                                                 const typename Motion::Product &tKeyframeAgent,
-                                                 const Eigen::Vector<Precision, 2> &affine_brightness,
-                                                 Precision mean_square_optical_flow,
-                                                 Precision mean_square_optical_flow_without_rotation,
-                                                 Precision pose_rmse, bool valid) {
+void ActiveKeyframe<Motion>::attachTrackingFrame(
+    size_t id, time timestamp, const typename Motion::Product &tKeyframeAgent, const Precision exposure_time,
+    const Eigen::Vector<Precision, 2> &affine_brightness, Precision mean_square_optical_flow,
+    Precision mean_square_optical_flow_without_rotation, Precision pose_rmse, bool valid) {
   auto frame = std::make_unique<SLAMInternalTrackingFrame<Motion>>(
-      id, timestamp, this->tWorldAgent_, tKeyframeAgent, affine_brightness, mean_square_optical_flow,
+      id, timestamp, this->tWorldAgent_, tKeyframeAgent, exposure_time, affine_brightness, mean_square_optical_flow,
       mean_square_optical_flow_without_rotation, pose_rmse, valid);
   attached_frames_.push_back(std::move(frame));
 }

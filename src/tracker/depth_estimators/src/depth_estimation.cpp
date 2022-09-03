@@ -38,8 +38,9 @@ void findBest(const std::vector<energy::epipolar_geometry::EpipolarLine::Epipola
               const Eigen::Vector<Precision, Pattern::kSize> &reference_pattern,
               const Eigen::Vector2<Precision> &coords, const Grid2D &target_frame, const Model &camera_model,
               const MotionProduct &t_target_reference, const sensors::calibration::CameraMask &camera_mask,
-              const Eigen::Vector2<Precision> &reference_affine_brightness,
-              const Eigen::Vector2<Precision> &target_affine_brightness, const size_t distance) {
+              const Precision reference_exposure_time, const Eigen::Vector2<Precision> &reference_affine_brightness,
+              const Precision target_exposure_time, const Eigen::Vector2<Precision> &target_affine_brightness,
+              const size_t distance) {
   const energy::reprojection::ArrayReprojector<Precision, Model, MotionProduct> reprojector(camera_model,
                                                                                             t_target_reference);
   Eigen::Matrix<Precision, 2, Pattern::kSize> reference_patch;
@@ -48,6 +49,7 @@ void findBest(const std::vector<energy::epipolar_geometry::EpipolarLine::Epipola
   Eigen::Vector<Precision, Pattern::kSize> target_pattern;
 
   const Eigen::Vector<Precision, Pattern::kSize> reference_pattern_precalc =
+      (target_exposure_time / reference_exposure_time) *
       ceres::exp(target_affine_brightness[0] - reference_affine_brightness[0]) *
       (reference_pattern - Eigen::Vector<Precision, Pattern::kSize>::Constant(reference_affine_brightness[1]));
 
@@ -79,13 +81,17 @@ class DepthEstimationProblem {
  public:
   DepthEstimationProblem(const Grid2D<C> &target_frame,
                          const Eigen::Matrix<Precision, Pattern::kSize, 1> &reference_patch,
+                         const Precision reference_exposure_time,
                          const Eigen::Vector2<Precision> &reference_affine_brightness,
+                         const Precision target_exposure_time,
                          const Eigen::Vector2<Precision> &target_affine_brightness, const Model &model,
                          Eigen::Matrix<Precision, 2, Pattern::kSize> &target_pattern,
                          const Eigen::Vector2<Precision> &tangent, const Precision sigma_huber_loss)
       : target_frame_(target_frame),
         reference_patch_(reference_patch),
+        reference_exposure_time_(reference_exposure_time),
         reference_affine_brightness_(reference_affine_brightness),
+        target_exposure_time_(target_exposure_time),
         target_affine_brightness_(target_affine_brightness),
         model_(model),
         target_pattern_(target_pattern),
@@ -93,6 +99,7 @@ class DepthEstimationProblem {
         tangent_(tangent),
         sigma_huber_loss_(sigma_huber_loss),
         reference_pattern_precalc_(
+            (target_exposure_time_ / reference_exposure_time_) *
             ceres::exp(target_affine_brightness_[0] - reference_affine_brightness_[0]) *
             (reference_patch_ - Eigen::Vector<Precision, Pattern::kSize>::Constant(reference_affine_brightness_[1]))) {}
 
@@ -156,7 +163,9 @@ class DepthEstimationProblem {
  private:
   const Grid2D<C> &target_frame_;
   const Eigen::Matrix<Precision, Pattern::kSize, 1> &reference_patch_;
+  const Precision reference_exposure_time_;
   const Eigen::Vector2<Precision> &reference_affine_brightness_;
+  const Precision target_exposure_time_;
   const Eigen::Vector2<Precision> &target_affine_brightness_;
   const Model &model_;
   Eigen::Matrix<Precision, 2, Pattern::kSize> &target_pattern_;
@@ -175,7 +184,8 @@ template <energy::motion::MotionProduct MotionProduct, template <int> typename G
           int C>
 std::optional<Eigen::Vector2<Precision>> refine(
     const Grid2D<C> &target_frame, track::landmarks::ImmatureTrackingLandmark &reference_landmark,
-    const MotionProduct &t_t_r, const Eigen::Vector2<Precision> &reference_affine_brightness,
+    const MotionProduct &t_t_r, const Precision reference_exposure_time,
+    const Eigen::Vector2<Precision> &reference_affine_brightness, const Precision target_exposure_time,
     const Eigen::Vector2<Precision> &target_affine_brightness, const Model &camera_model,
     const Precision sigma_huber_loss, const Eigen::Vector2<Precision> &tangent,
     const energy::epipolar_geometry::EpipolarLine::EpipolarLinePoint &epipolar_point, Precision &best_energy) {
@@ -199,8 +209,8 @@ std::optional<Eigen::Vector2<Precision>> refine(
   }
 
   DepthEstimationProblem<MotionProduct, Grid2D, Model, C> problem(
-      target_frame, reference_landmark.patch(), reference_affine_brightness, target_affine_brightness, camera_model,
-      target_pattern, tangent, sigma_huber_loss);
+      target_frame, reference_landmark.patch(), reference_exposure_time, reference_affine_brightness,
+      target_exposure_time, target_affine_brightness, camera_model, target_pattern, tangent, sigma_huber_loss);
 
   auto result = energy::levenberg_marquardt_algorithm::solve(problem, options);
   best_energy = result.energy;
@@ -211,8 +221,9 @@ std::optional<Eigen::Vector2<Precision>> refine(
 template <energy::motion::MotionProduct MotionProduct, template <int> typename Grid2D, energy::model::Model Model,
           int C>
 void estimateLandmark(const Grid2D<C> &target_frame, track::landmarks::ImmatureTrackingLandmark &reference_landmark,
-                      const MotionProduct &t_t_r, const Eigen::Vector2<Precision> &reference_affine_brightness,
-                      const Eigen::Vector2<Precision> &target_affine_brightness,
+                      const MotionProduct &t_t_r, const Precision reference_exposure_time,
+                      const Eigen::Vector2<Precision> &reference_affine_brightness,
+                      const Precision target_exposure_time, const Eigen::Vector2<Precision> &target_affine_brightness,
                       const sensors::calibration::CameraCalibration &calibration,
                       const sensors::calibration::CameraMask &camera_mask, const Precision sigma_huber_loss) {
   const Precision kMinEpilineSize = 2;
@@ -271,7 +282,8 @@ void estimateLandmark(const Grid2D<C> &target_frame, track::landmarks::ImmatureT
   }
   findBest<MotionProduct, Grid2D<C>, Model>(epiline_points, energies, best_energy, optimum, reference_landmark.patch(),
                                             coords, target_frame, *camera_model, t_t_r, camera_mask,
-                                            reference_affine_brightness, target_affine_brightness, distance);
+                                            reference_exposure_time, reference_affine_brightness, target_exposure_time,
+                                            target_affine_brightness, distance);
 
   Precision second_best_energy = std::numeric_limits<Precision>::max();
   for (size_t idx = 0; idx < epiline_points.size(); idx++) {
@@ -285,8 +297,9 @@ void estimateLandmark(const Grid2D<C> &target_frame, track::landmarks::ImmatureT
 
   const Eigen::Vector2<Precision> tangent = epiline_vector.stableNormalized();
   auto refined_point = refine<MotionProduct, Grid2D, Model, C>(
-      target_frame, reference_landmark, t_t_r, reference_affine_brightness, target_affine_brightness, *camera_model,
-      sigma_huber_loss, tangent, epiline_points[optimum], best_energy);
+      target_frame, reference_landmark, t_t_r, reference_exposure_time, reference_affine_brightness,
+      target_exposure_time, target_affine_brightness, *camera_model, sigma_huber_loss, tangent, epiline_points[optimum],
+      best_energy);
 
   if (!refined_point) {
     reference_landmark.setSearchPixelInterval(0);
@@ -350,7 +363,8 @@ template <energy::motion::MotionProduct MotionProduct, template <int> typename G
 void DepthEstimation::estimate(
     const Grid2D<C> &target_frame,
     std::vector<std::reference_wrapper<track::landmarks::ImmatureTrackingLandmark>> &reference_landmarks,
-    const MotionProduct &t_t_r, const Eigen::Vector2<Precision> &reference_affine_brightness,
+    const MotionProduct &t_t_r, const Precision reference_exposure_time,
+    const Eigen::Vector2<Precision> &reference_affine_brightness, const Precision target_exposure_time,
     const Eigen::Vector2<Precision> &target_affine_brightness,
     const sensors::calibration::CameraCalibration &calibration, const sensors::calibration::CameraMask &camera_mask,
     const Precision sigma_huber_loss) {
@@ -359,20 +373,21 @@ void DepthEstimation::estimate(
   tbb::parallel_for(tbb::blocked_range<size_t>(0, N), [&](auto r) {
     for (auto i = r.begin(); i != r.end(); ++i) {
       auto &landmark = reference_landmarks[i];
-      estimateLandmark<MotionProduct, Grid2D, Model, C>(target_frame, landmark, t_t_r, reference_affine_brightness,
-                                                        target_affine_brightness, calibration, camera_mask,
-                                                        sigma_huber_loss);
+      estimateLandmark<MotionProduct, Grid2D, Model, C>(
+          target_frame, landmark, t_t_r, reference_exposure_time, reference_affine_brightness, target_exposure_time,
+          target_affine_brightness, calibration, camera_mask, sigma_huber_loss);
     }
   });
 }
 
-#define EstimateInstantiation(Model, Motion)                                                                           \
-  template void DepthEstimation::estimate<energy::motion::Motion<Precision>, features::PixelMap,                       \
-                                          energy::model::Model<Precision>, 1>(                                         \
-      const features::PixelMap<1> &,                                                                                   \
-      std::vector<std::reference_wrapper<track::landmarks::ImmatureTrackingLandmark>> &,                               \
-      const energy::motion::Motion<Precision> &, const Eigen::Vector2<Precision> &, const Eigen::Vector2<Precision> &, \
-      const sensors::calibration::CameraCalibration &, const sensors::calibration::CameraMask &, Precision)
+#define EstimateInstantiation(Model, Motion)                                                                          \
+  template void DepthEstimation::estimate<energy::motion::Motion<Precision>, features::PixelMap,                      \
+                                          energy::model::Model<Precision>, 1>(                                        \
+      const features::PixelMap<1> &,                                                                                  \
+      std::vector<std::reference_wrapper<track::landmarks::ImmatureTrackingLandmark>> &,                              \
+      const energy::motion::Motion<Precision> &, const Precision, const Eigen::Vector2<Precision> &, const Precision, \
+      const Eigen::Vector2<Precision> &, const sensors::calibration::CameraCalibration &,                             \
+      const sensors::calibration::CameraMask &, Precision)
 
 EstimateInstantiation(PinholeCamera, SE3);
 EstimateInstantiation(SimpleRadialCamera, SE3);

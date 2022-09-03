@@ -29,9 +29,11 @@ class Frame {
    * @param id frame id
    * @param timestamp time of the capture
    * @param tWorldAgent pose of the agent
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    */
-  Frame(size_t id, time timestamp, const Motion &tWorldAgent, const Eigen::Vector<Precision, 2> &affine_brightness);
+  Frame(size_t id, time timestamp, const Motion &tWorldAgent, const Precision exposure_time,
+        const Eigen::Vector<Precision, 2> &affine_brightness);
   /**
    * @return transformation from agent's coordinate system to world's
    */
@@ -44,6 +46,10 @@ class Frame {
    * @return id of a frame
    */
   size_t id() const;
+  /**
+   * @return exposure time
+   */
+  Precision exposureTime() const;
   /**
    * @return affine brightness
    */
@@ -79,6 +85,8 @@ class Frame {
   const time timestamp_;
   /** Agent to world transformation */
   Motion tWorldAgent_;
+  /** exposure time */
+  const Precision exposure_time_;
   /** affine brightness */
   Eigen::Vector<Precision, 2> affine_brightness_;
   /** stores 3-channel image in ``uchar`` buffer

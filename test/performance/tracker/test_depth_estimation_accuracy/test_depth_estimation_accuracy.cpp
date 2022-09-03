@@ -114,7 +114,7 @@ int main() {
 
     gt_world_cam = camera_poses_gt.getPose(features.timestamp());
 
-    track::SLAMInternalTrackingFrame slam_internal_frame(current_frame_id++, features.timestamp(), SE3(), SE3(),
+    track::SLAMInternalTrackingFrame slam_internal_frame(current_frame_id++, features.timestamp(), SE3(), SE3(), 1,
                                                          Eigen::Vector2<Precision>::Zero(), 0, 0);
 
     if (kf_strategy->needNewKeyframe(track, slam_internal_frame)) {
@@ -167,7 +167,7 @@ int main() {
         landmarks.push_back(landmark);
       }
       tracker::DepthEstimation::estimate<SE3, features::PixelMap, Model, 1>(
-          target_grid, landmarks, t_t_r, Eigen::Vector2<Precision>::Zero(), Eigen::Vector2<Precision>::Zero(),
+          target_grid, landmarks, t_t_r, 1, Eigen::Vector2<Precision>::Zero(), 1, Eigen::Vector2<Precision>::Zero(),
           camera.calibration(), camera.pyramidOfMasks()[0], 9);
     }
   }

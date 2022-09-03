@@ -57,9 +57,11 @@ class ActiveKeyframe : public Frame<Motion> {
    * @param keyframe_id id among other keyframes in the track
    * @param timestamp time of the capture
    * @param tWorldAgent pose of the agent
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    */
   ActiveKeyframe(size_t id, size_t keyframe_id, time timestamp, const Motion &tWorldAgent,
+                 const Precision exposure_time = 1,
                  const Eigen::Vector<Precision, 2> &affine_brightness = Eigen::Vector<Precision, 2>::Zero());
   /**
    * @return id among other keyframes in the track
@@ -80,6 +82,7 @@ class ActiveKeyframe : public Frame<Motion> {
    * @param id id of the frame
    * @param timestamp timestamp of the frame
    * @param tKeyframeAgent transformation from attached frame to keyframe
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness of attached frame
    * @param mean_square_optical_flow mean square optical flow from keyframe to frame
    * @param mean_square_optical_flow_without_rotation mean square optical flow without rotation from keyframe to frame
@@ -87,6 +90,7 @@ class ActiveKeyframe : public Frame<Motion> {
    * @param reliable pose estimation was reliable
    */
   void attachTrackingFrame(size_t id, time timestamp, const typename Motion::Product &tKeyframeAgent,
+                           const Precision exposure_time = 1,
                            const Eigen::Vector<Precision, 2> &affine_brightness = Eigen::Vector<Precision, 2>::Zero(),
                            Precision mean_square_optical_flow = 0,
                            Precision mean_square_optical_flow_without_rotation = 0, Precision pose_rmse = 0,

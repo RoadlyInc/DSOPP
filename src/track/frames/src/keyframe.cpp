@@ -11,8 +11,9 @@ namespace dsopp {
 namespace track {
 template <energy::motion::Motion Motion>
 Keyframe<Motion>::Keyframe(size_t id, size_t keyframe_id, time timestamp, const Motion &tWorldAgent,
-                           const Eigen::Vector<Precision, 2> &affine_brightness, LandmarksFrame &&landmarks)
-    : Frame<Motion>(id, timestamp, tWorldAgent, affine_brightness),
+                           const Precision exposure_time, const Eigen::Vector<Precision, 2> &affine_brightness,
+                           LandmarksFrame &&landmarks)
+    : Frame<Motion>(id, timestamp, tWorldAgent, exposure_time, affine_brightness),
       keyframe_id_(keyframe_id),
       landmarks_(std::move(landmarks)) {}
 
@@ -32,7 +33,7 @@ size_t Keyframe<Motion>::keyframeId() const {
 template <energy::motion::Motion Motion>
 Keyframe<Motion>::Keyframe(const proto::Keyframe &proto)
     : Frame<Motion>(proto.id(), time(std::chrono::high_resolution_clock::duration(proto.timestamp())), Motion(),
-                    Eigen::Vector<Precision, 2>::Zero()),
+                    static_cast<Precision>(proto.exposure_time()), Eigen::Vector<Precision, 2>::Zero()),
       keyframe_id_(proto.keyframe_id()) {
   {
     CHECK_EQ(proto.t_world_agent_size(), Motion::num_parameters);
@@ -62,13 +63,15 @@ Keyframe<Motion>::Keyframe(const proto::Keyframe &proto)
     }
     t_keyframe_tracking.setParameters(parameters);
 
+    const Precision exposure_time = static_cast<Precision>(tracking_frame.exposure_time());
+
     Eigen::Vector<Precision, 2> affine_brightness;
     CHECK_EQ(tracking_frame.affine_brightness_size(), affine_brightness.size());
     for (int j = 0; j < affine_brightness.size(); j++) {
       affine_brightness[j] = static_cast<Precision>(tracking_frame.affine_brightness(j));
     }
     attachTrackingFrame(proto.id(), time(std::chrono::high_resolution_clock::duration(tracking_frame.timestamp())),
-                        t_keyframe_tracking, affine_brightness);
+                        t_keyframe_tracking, exposure_time, affine_brightness);
     for (const auto &[sensor, buffer] : tracking_frame.image_buffer()) {
       std::vector<uchar> image_buffer(buffer.begin(), buffer.end());
       lastAttachedFrame().pushImage(sensor, std::move(image_buffer));
@@ -101,6 +104,8 @@ proto::Keyframe Keyframe<Motion>::proto() const {
       proto.add_t_world_agent(parameters(i));
     }
   }
+
+  { proto.set_exposure_time(static_cast<double>(this->exposure_time_)); }
 
   {
     for (int i = 0; i < this->affine_brightness_.size(); i++) {
@@ -135,9 +140,10 @@ const std::vector<landmarks::TrackingLandmark> &Keyframe<Motion>::landmarks(size
 
 template <energy::motion::Motion Motion>
 void Keyframe<Motion>::attachTrackingFrame(size_t id, time timestamp, const typename Motion::Product &tKeyframeAgent,
+                                           const Precision exposure_time,
                                            const Eigen::Vector<Precision, 2> &affine_brightness) {
-  auto frame =
-      std::make_unique<TrackingFrame<Motion>>(id, timestamp, this->tWorldAgent_, tKeyframeAgent, affine_brightness);
+  auto frame = std::make_unique<TrackingFrame<Motion>>(id, timestamp, this->tWorldAgent_, tKeyframeAgent, exposure_time,
+                                                       affine_brightness);
   attached_frames_.push_back(std::move(frame));
 }
 

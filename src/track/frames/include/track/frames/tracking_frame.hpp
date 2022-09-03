@@ -21,10 +21,12 @@ class TrackingFrame : public Frame<Motion> {
    * @param timestamp timestamps of the frame
    * @param t_world_keyframe transformation from keyframe to world
    * @param t_keyframe_agent transformation from agent to keyframe
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    */
   TrackingFrame(size_t id, time timestamp, const Motion& t_world_keyframe,
-                const typename Motion::Product& t_keyframe_agent, const Eigen::Vector<Precision, 2>& affine_brightness);
+                const typename Motion::Product& t_keyframe_agent, const Precision exposure_time,
+                const Eigen::Vector<Precision, 2>& affine_brightness);
 
   /**
    * creates protobuf container from the object
