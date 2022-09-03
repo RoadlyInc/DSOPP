@@ -33,7 +33,8 @@ void firstEstimateJacobians_(
 
         const Eigen::Vector2<Scalar> reference_affine_brightness = reference_frame->affine_brightness0;
         const Eigen::Vector2<Scalar> target_affine_brightness = target_frame->affine_brightness0;
-        const Scalar brightness_change_scale = std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
+        const Scalar brightness_change_scale = (target_frame->exposure_time / reference_frame->exposure_time) *
+                                               std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
 
         for (const auto &sensor_1 : reference_frame->sensors()) {
           for (const auto &sensor_2 : reference_frame->sensors()) {

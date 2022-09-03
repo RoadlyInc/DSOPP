@@ -53,7 +53,8 @@ void evaluateJacobians(std::deque<std::unique_ptr<LocalFrame<Scalar, Motion, Mod
         const Eigen::Vector2<Scalar> target_affine_brightness =
             target_frame->affine_brightness0 + target_affine_brightness_eps;
 
-        const Scalar brightness_change_scale = std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
+        const Scalar brightness_change_scale = (target_frame->exposure_time / reference_frame->exposure_time) *
+                                               std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
 
         const reprojection::ArrayReprojector<Scalar, Model, typename MotionCasted::Product> reprojector(
             reference_frame->model, target_frame->model, t_t_r);

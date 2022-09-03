@@ -45,9 +45,10 @@ void updateResidual(LocalFrame<double, Motion, Model, PatternSize, Grid2D, C> &r
       auto &landmark = landmarks[landmark_index];
       cost_functors::BundleAdjustmentPhotometricCostFunctor<Motion, Grid2D<C>, Model, PatternSize, C> cost_functors(
           reference_frame.T_w_agent_linearization_point, target_frame.T_w_agent_linearization_point,
-          reference_frame.affine_brightness0, target_frame.affine_brightness0, *target_frame.grids.at(sensor_id),
-          landmark.reference_pattern, landmark.patch, target_frame.masks.at(sensor_id),
-          reference_frame.model.image_size(), target_frame.model.image_size());
+          reference_frame.exposure_time, reference_frame.affine_brightness0, target_frame.exposure_time,
+          target_frame.affine_brightness0, *target_frame.grids.at(sensor_id), landmark.reference_pattern,
+          landmark.patch, target_frame.masks.at(sensor_id), reference_frame.model.image_size(),
+          target_frame.model.image_size());
       residuals[landmark_index].connection_status = cost_functors(
           reference_frame.state_eps.template head<Motion::DoF>(), target_frame.state_eps.template head<Motion::DoF>(),
           landmark.idepth, reference_frame.state_eps.template tail<2>(), target_frame.state_eps.template tail<2>(),

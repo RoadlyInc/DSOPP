@@ -310,6 +310,7 @@ class LocalFrame {
              FrameParameterization _frame_parameterization)
       : timestamp(frame.timestamp()),
         T_w_agent_linearization_point(frame.tWorldAgent().template cast<Scalar>()),
+        exposure_time(static_cast<Scalar>(frame.exposureTime())),
         affine_brightness0(frame.affineBrightness().template cast<Scalar>()),
         model(_model),
         intrinsic_parameters(_model.intrinsicsParameters().template cast<Scalar>()),
@@ -340,6 +341,7 @@ class LocalFrame {
    * @param pyramids pyramids of the data from sensors
    * @param _masks masks from the sensors
    * @param depths_maps depth maps for each sensor
+   * @param _exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param level level from which features are selected
    * @param _model camera model for frame
@@ -347,12 +349,13 @@ class LocalFrame {
    */
   LocalFrame(time _timestamp, const Motion &_t_world_agent, const Pyramids &pyramids,
              const std::map<size_t, const sensors::calibration::CameraMask &> &_masks,
-             const std::map<size_t, std::vector<DepthMap>> &depths_maps,
+             const std::map<size_t, std::vector<DepthMap>> &depths_maps, const Scalar _exposure_time,
              const Eigen::Vector2<Scalar> &affine_brightness, size_t level, const Model &_model,
              FrameParameterization _frame_parameterization)
       : id(kFrontendReferenceFrameId),
         timestamp(_timestamp),
         T_w_agent_linearization_point(_t_world_agent.template cast<Scalar>()),
+        exposure_time(_exposure_time),
         affine_brightness0(affine_brightness),
         model(_model),
         intrinsic_parameters(_model.intrinsicsParameters().template cast<Scalar>()),
@@ -398,6 +401,7 @@ class LocalFrame {
    * @param _masks masks from the sensors
    * @param _model model
    * @param tracking_landmarks tracking landmarks
+   * @param _exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param level level from which features are selected
    * @param level_resize_ratio resize ratio of level image
@@ -406,11 +410,12 @@ class LocalFrame {
   LocalFrame(time _timestamp, const Motion &_t_world_agent, const Pyramids &pyramids,
              const std::map<size_t, const sensors::calibration::CameraMask &> &_masks,
              const std::map<size_t, std::vector<track::landmarks::TrackingLandmark>> &tracking_landmarks,
-             const Eigen::Vector2<Scalar> &affine_brightness, const Model &_model, size_t level,
-             Precision level_resize_ratio, FrameParameterization _frame_parameterization)
+             const Scalar _exposure_time, const Eigen::Vector2<Scalar> &affine_brightness, const Model &_model,
+             size_t level, Precision level_resize_ratio, FrameParameterization _frame_parameterization)
       : id(kFrontendReferenceFrameId),
         timestamp(_timestamp),
         T_w_agent_linearization_point(_t_world_agent.template cast<Scalar>()),
+        exposure_time(_exposure_time),
         affine_brightness0(affine_brightness),
         model(_model),
         state_eps(Eigen::Vector<Scalar, Motion::DoF + 2>::Zero()),
@@ -442,6 +447,7 @@ class LocalFrame {
    * @param _t_world_agent pose of the frame
    * @param pyramids pyramids of the data from sensors
    * @param _masks masks from the sensors
+   * @param _exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param _is_marginalized true if marginalized
    * @param level level from which features are selected
@@ -449,12 +455,13 @@ class LocalFrame {
    * @param _frame_parameterization constraint on frame position
    */
   LocalFrame(time _timestamp, const Motion &_t_world_agent, const Pyramids &pyramids,
-             const std::map<size_t, const sensors::calibration::CameraMask &> &_masks,
+             const std::map<size_t, const sensors::calibration::CameraMask &> &_masks, const Scalar _exposure_time,
              const Eigen::Vector2<Scalar> &affine_brightness, bool _is_marginalized, size_t level, const Model &_model,
              FrameParameterization _frame_parameterization)
       : id(kFrontendTargetFrameId),
         timestamp(_timestamp),
         T_w_agent_linearization_point(_t_world_agent.template cast<Scalar>()),
+        exposure_time(_exposure_time),
         affine_brightness0(affine_brightness),
         model(_model),
         intrinsic_parameters(_model.intrinsicsParameters().template cast<Scalar>()),
@@ -539,6 +546,8 @@ class LocalFrame {
   /** Agent to world transformation linearization point is point which we use to draw a tangent space to replace
    * the target function with linear aproximation*/
   typename Motion::template CastT<Scalar> T_w_agent_linearization_point;
+  /** exposure time */
+  const Scalar exposure_time;
   /** affine brightness before optimization*/
   Eigen::Vector2<Scalar> affine_brightness0;
   /** camera model for the frame*/

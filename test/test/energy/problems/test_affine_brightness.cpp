@@ -129,7 +129,7 @@ TEST(affine_brightness, affine_brightness) {
     nonkeyframe_pyramids[sensor] = features::movePyramidAndDelete(pyramids);
   }
   dsopp_solver.pushFrame(frame2.timestamp(), Sophus::SE3<Precision>(), nonkeyframe_pyramids,
-                         {{sensor, camera.pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0, *model);
+                         {{sensor, camera.pyramidOfMasks()[0]}}, 1, Eigen::Vector2<Precision>::Zero(), 0, *model);
   dsopp_solver.solve(4);
   auto reference_affine_brightness_dsopp = dsopp_solver.getAffineBrightness(frame1.timestamp());
   auto target_affine_brightness_dsopp = dsopp_solver.getAffineBrightness(frame2.timestamp());
@@ -144,7 +144,7 @@ TEST(affine_brightness, affine_brightness) {
           Eigen::Vector2<double>::Constant(1e12), 1e16, 5));
   ceres_solver.pushFrame(*track.activeFrames().back(), 0, *model);
   ceres_solver.pushFrame(frame2.timestamp(), Sophus::SE3<Precision>(), nonkeyframe_pyramids,
-                         {{sensor, camera.pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0, *model);
+                         {{sensor, camera.pyramidOfMasks()[0]}}, 1, Eigen::Vector2<Precision>::Zero(), 0, *model);
   ceres_solver.solve(4);
   auto reference_affine_brightness_ceres = ceres_solver.getAffineBrightness(frame1.timestamp());
   auto target_affine_brightness_ceres = ceres_solver.getAffineBrightness(frame2.timestamp());

@@ -68,6 +68,11 @@ void testAnalyticalDiff() {
   SE3 t_w_target = frame1.tWorldAgent();
   SE3 t_w_host = frame2.tWorldAgent();
   double idepth = 0.05;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0, 1);
+  const double exposure_time_target = dis(gen) * 0.05;
+  const double exposure_time_host = dis(gen) * 0.05;
   Eigen::Vector2d aff_brightness_target = Eigen::Vector2d::Random() * 0.5;
   Eigen::Vector2d aff_brightness_host = Eigen::Vector2d::Random() * 0.5;
   Eigen::Vector<double, ModelDof> intrinsics_parameters_reference =
@@ -91,15 +96,13 @@ void testAnalyticalDiff() {
   auto pyramids1 = pyramids<C>(frame1);
   frames.push_back(std::make_unique<LocalFrame<double, SE3, typename test_tools::SolverTestData<SE3>::Model,
                                                Pattern::kSize, features::PixelMap, C>>(
-      frame1.timestamp(), t_w_host, *pyramids1, masks, depths_maps, Eigen::Vector2<double>::Zero(), 0, *data.model,
-      FrameParameterization::kFree));
+      frame1.timestamp(), t_w_host, *pyramids1, masks, depths_maps, exposure_time_host, aff_brightness_host, 0,
+      *data.model, FrameParameterization::kFree));
   auto pyramids2 = pyramids<C>(frame2);
   frames.push_back(std::make_unique<LocalFrame<double, SE3, typename test_tools::SolverTestData<SE3>::Model,
                                                Pattern::kSize, features::PixelMap, C>>(
-      frame2.timestamp(), t_w_target, *pyramids2, masks, Eigen::Vector2<double>::Zero(), false, 0, *data.model,
-      FrameParameterization::kFree));
-  frames[0]->affine_brightness0 = aff_brightness_host;
-  frames[1]->affine_brightness0 = aff_brightness_target;
+      frame2.timestamp(), t_w_target, *pyramids2, masks, exposure_time_target, aff_brightness_target, false, 0,
+      *data.model, FrameParameterization::kFree));
 
   frames[0]->residuals[std::make_pair(data.sensor, data.sensor)][frames[1]->id].push_back(
       track::PointConnectionStatus::kOk);
@@ -117,9 +120,10 @@ void testAnalyticalDiff() {
   auto analytic_functor = std::make_unique<CostFunctorAnalytic>(
       frames[0]->residuals[std::make_pair(data.sensor, data.sensor)][frames[1]->id][0]);
   CostFunctorAuto* auto_functor_ = new CostFunctorAuto(
-      t_w_host.cast<double>(), t_w_target.cast<double>(), aff_brightness_host, aff_brightness_target,
-      PyramidsTraits<SE3, C>::getLevel(frame2, data.sensor, 0), pattern.cast<double>(), patch.template cast<double>(),
-      data.camera->pyramidOfMasks()[0], data.model->image_size(), data.model->image_size());
+      t_w_host.cast<double>(), t_w_target.cast<double>(), exposure_time_host, aff_brightness_host, exposure_time_target,
+      aff_brightness_target, PyramidsTraits<SE3, C>::getLevel(frame2, data.sensor, 0), pattern.cast<double>(),
+      patch.template cast<double>(), data.camera->pyramidOfMasks()[0], data.model->image_size(),
+      data.model->image_size());
   auto auto_functor = std::make_unique<
       ceres::AutoDiffCostFunction<CostFunctorAuto, CostFunctorAuto::residuals_num, 8, 8, 1, ModelDof, ModelDof>>(
       auto_functor_);

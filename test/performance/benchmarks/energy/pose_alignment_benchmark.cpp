@@ -28,7 +28,7 @@ static void CeresPoseAligment(benchmark::State& state) {
     ceres_solver.pushFrame(*odometry_track.keyframes()[0], 0, *data.model,
                            energy::problem::FrameParameterization::kFixed);
     ceres_solver.pushFrame(odometry_track.keyframes()[1]->timestamp(), SE3(), odometry_track.keyframes()[1]->pyramids(),
-                           {{data.sensor, data.camera->pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0,
+                           {{data.sensor, data.camera->pyramidOfMasks()[0]}}, 1, Eigen::Vector2<Precision>::Zero(), 0,
                            *data.model);
     ceres_solver.solve(1);
   }
@@ -48,7 +48,7 @@ static void EigenPoseAligment(benchmark::State& state) {
     eigen_solver.pushFrame(*odometry_track.keyframes()[0], 0, *data.model,
                            energy::problem::FrameParameterization::kFixed);
     eigen_solver.pushFrame(odometry_track.keyframes()[1]->timestamp(), SE3(), odometry_track.keyframes()[1]->pyramids(),
-                           {{data.sensor, data.camera->pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0,
+                           {{data.sensor, data.camera->pyramidOfMasks()[0]}}, 1, Eigen::Vector2<Precision>::Zero(), 0,
                            *data.model);
     eigen_solver.solve(1);
   }

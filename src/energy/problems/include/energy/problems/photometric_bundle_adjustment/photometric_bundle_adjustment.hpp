@@ -62,6 +62,7 @@ class PhotometricBundleAdjustment {
    * @param pyramids pyramids of the data from sensors
    * @param masks masks from the sensors
    * @param depths_maps depth maps for each sensor
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param level level of the pyramid which will be added to the solver
    * @param model camera model for frame
@@ -69,7 +70,7 @@ class PhotometricBundleAdjustment {
    */
   void pushFrame(time timestamp, const Motion &t_world_agent, const Pyramids &pyramids,
                  const std::map<size_t, const sensors::calibration::CameraMask &> &masks,
-                 const std::map<size_t, std::vector<DepthMap>> &depths_maps,
+                 const std::map<size_t, std::vector<DepthMap>> &depths_maps, const Precision exposure_time,
                  const Eigen::Vector2<Precision> &affine_brightness, size_t level, const Model &model,
                  FrameParameterization frame_parameterization = FrameParameterization::kFree);
 
@@ -81,6 +82,7 @@ class PhotometricBundleAdjustment {
    * @param pyramids pyramids of the data from sensors
    * @param masks masks from the sensors
    * @param tracking_landmarks map of sensor_id -> tracking landmark vector
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param model camera model
    * @param level level of the pyramid which will be added to the solver
@@ -90,8 +92,8 @@ class PhotometricBundleAdjustment {
   void pushFrame(time timestamp, const Motion &t_world_agent, const Pyramids &pyramids,
                  const std::map<size_t, const sensors::calibration::CameraMask &> &masks,
                  const std::map<size_t, std::vector<track::landmarks::TrackingLandmark>> &tracking_landmarks,
-                 const Eigen::Vector2<Precision> &affine_brightness, const Model &model, size_t level,
-                 Precision level_resize_ratio,
+                 const Precision exposure_time, const Eigen::Vector2<Precision> &affine_brightness, const Model &model,
+                 size_t level, Precision level_resize_ratio,
                  FrameParameterization frame_parameterization = FrameParameterization::kFree);
 
   /**
@@ -101,13 +103,14 @@ class PhotometricBundleAdjustment {
    * @param t_world_agent_init initial pose of the frame
    * @param pyramids pyramids of the data from sensors
    * @param masks masks from the sensors
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param level level of the pyramid which will be added to the solver
    * @param model camera model for frame
    * @param frame_parameterization constraint on frame position
    */
   void pushFrame(time timestamp, const Motion &t_world_agent_init, const Pyramids &pyramids,
-                 const std::map<size_t, const sensors::calibration::CameraMask &> &masks,
+                 const std::map<size_t, const sensors::calibration::CameraMask &> &masks, const Precision exposure_time,
                  const Eigen::Vector2<Precision> &affine_brightness, size_t level, const Model &model,
                  FrameParameterization frame_parameterization = FrameParameterization::kFree);
   /**

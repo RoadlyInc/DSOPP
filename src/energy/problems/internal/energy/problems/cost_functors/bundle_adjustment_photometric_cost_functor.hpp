@@ -34,8 +34,9 @@ class BundleAdjustmentPhotometricCostFunctor {
   static constexpr int residuals_num = PatternSize * C;
   /**
    * Create functor to calculate the cost of photometric bundle adjustment between two frames
-   * @param t_w_r0,t_w_t0 initial estimates of camera tranformation
-   * @param reference_affine_brightness0,target_affine_brightness0 initial estimates of affine brigtensses
+   * @param t_w_r0,t_w_t0 initial estimates of camera transformation
+   * @param reference_exposure_time, target_exposure_time exposure times
+   * @param reference_affine_brightness0,target_affine_brightness0 initial estimates of affine brightnesses
    * @param target_grid 2D grid corresponding to the target frame
    * @param reference_pattern projection of the landmark on the reference frame with pattern
    * @param patch patch of the landmarks on the reference frame
@@ -43,7 +44,9 @@ class BundleAdjustmentPhotometricCostFunctor {
    * @param reference_image_size,target_image_size image size
    * */
   BundleAdjustmentPhotometricCostFunctor(const MotionDouble &t_w_r0, const MotionDouble &t_w_t0,
+                                         const double reference_exposure_time,
                                          const Eigen::Vector2d &reference_affine_brightness0,
+                                         const double target_exposure_time,
                                          const Eigen::Vector2d &target_affine_brightness0, const Grid2D &target_grid,
                                          const Eigen::Matrix<double, 2, PatternSize> &reference_pattern,
                                          const Eigen::Matrix<double, PatternSize, C, PatchStorageOrder<C>> &patch,
@@ -51,7 +54,9 @@ class BundleAdjustmentPhotometricCostFunctor {
                                          const Eigen::Vector2<Precision> &reference_image_size,
                                          const Eigen::Vector2<Precision> &target_image_size)
       : t_t_r0(t_w_t0.inverse() * t_w_r0),
+        reference_exposure_time_(reference_exposure_time),
         reference_affine_brightness0_(reference_affine_brightness0),
+        target_exposure_time_(target_exposure_time),
         target_affine_brightness0_(target_affine_brightness0),
         reference_pattern_(reference_pattern),
         patch_(patch),
@@ -63,9 +68,9 @@ class BundleAdjustmentPhotometricCostFunctor {
   /**
    * Operator overloading for the ceres optimization with poses and idepths
    * @param t_w_r_eps additive value to a reference pose
-   * @param t_w_t_eps additive value to atarget pose
-   * @param reference_affine_brightness_eps additive value to a reference pose's affine brightess
-   * @param target_affine_brightness_eps additive value to a reference pose's affine brightess
+   * @param t_w_t_eps additive value to a target pose
+   * @param reference_affine_brightness_eps additive value to a reference pose's affine brightness
+   * @param target_affine_brightness_eps additive value to a reference pose's affine brightness
    * @param idepth inverse depth of the landmark
    * @param reference_intrinsic_parameters,target_intrinsic_parameters intrinsic parameters
    * @param residuals cost to fill out
@@ -102,7 +107,8 @@ class BundleAdjustmentPhotometricCostFunctor {
       Eigen::Map<Eigen::Matrix<T, PatternSize, C, PatchStorageOrder<C>>> matrix_residuals(residuals.data());
       measure::SimilarityMeasureSSD::residuals(
           target_patch - Eigen::Matrix<T, PatternSize, C, PatchStorageOrder<C>>::Constant(target_affine_brightness[1]),
-          ceres::exp(target_affine_brightness[0] - reference_affine_brightness[0]) *
+          (target_exposure_time_ / reference_exposure_time_) *
+              ceres::exp(target_affine_brightness[0] - reference_affine_brightness[0]) *
               (patch_.template cast<T>() -
                Eigen::Matrix<T, PatternSize, C, PatchStorageOrder<C>>::Constant(reference_affine_brightness[1])),
           matrix_residuals);
@@ -143,9 +149,13 @@ class BundleAdjustmentPhotometricCostFunctor {
  private:
   /** initial estimate of reference to target transformation*/
   const typename MotionDouble::Product t_t_r0;
-  /** initial estimate of referenece frame affine brightess */
+  /** reference frame exposure time */
+  const double reference_exposure_time_;
+  /** initial estimate of reference frame affine brightness */
   const Eigen::Vector2d reference_affine_brightness0_;
-  /** initial estimate of target frame affine brightess */
+  /** target frame exposure time */
+  const double target_exposure_time_;
+  /** initial estimate of target frame affine brightness */
   const Eigen::Vector2d target_affine_brightness0_;
   /** patterrn of the landmark */
   const Eigen::Matrix<double, 2, PatternSize> reference_pattern_;

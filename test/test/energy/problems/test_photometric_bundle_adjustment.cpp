@@ -54,7 +54,7 @@ void alignIteratively(test_tools::SolverTestData<SE3> &data, SE3 &t_first_last) 
       pose_aligner.pushFrame(*odometry_track.keyframes()[i], 0, *data.model, FrameParameterization::kFixed);
     pose_aligner.pushFrame(
         odometry_track.keyframes()[keyframe_id]->timestamp(), odometry_track.keyframes()[keyframe_id]->tWorldAgent(),
-        odometry_track.keyframes()[keyframe_id]->pyramids(), {{data.sensor, data.camera->pyramidOfMasks()[0]}},
+        odometry_track.keyframes()[keyframe_id]->pyramids(), {{data.sensor, data.camera->pyramidOfMasks()[0]}}, 1,
         Eigen::Vector2<Precision>::Zero(), 0, *data.model);
     pose_aligner.solve(1);
     odometry_track.keyframes()[keyframe_id]->setTWorldAgent(

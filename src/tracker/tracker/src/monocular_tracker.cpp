@@ -177,7 +177,8 @@ bool estimatePose(track::ActiveOdometryTrack<Motion> &track,
                   energy::problem::PoseAlignment<Motion, Model, PatternSize, Grid2D, C> *solver,
                   const typename track::ActiveKeyframe<Motion>::Pyramids &pyramids, time timestamp,
                   const std::vector<sensors::calibration::CameraMask> &pyramid_of_masks, Motion &t_w_t,
-                  typename Motion::Product &t_r_t, Eigen::Vector2<Precision> &affine_brightness, const size_t sensor_id,
+                  typename Motion::Product &t_r_t, const Precision exposure_time,
+                  Eigen::Vector2<Precision> &affine_brightness, const size_t sensor_id,
                   const sensors::calibration::CameraCalibration &calibration,
                   const std::map<size_t, std::vector<energy::problem::DepthMap>> &reference_frame_depth_map,
                   const size_t number_of_threads, std::vector<Precision> &rmse_last_pose_estimation) {
@@ -203,11 +204,11 @@ bool estimatePose(track::ActiveOdometryTrack<Motion> &track,
       if (!track.empty()) {
         const auto &last_kf = track.lastKeyframe();
         solver->pushFrame(last_kf.timestamp(), last_kf.tWorldAgent(), last_kf.pyramids(), masks,
-                          reference_frame_depth_map, last_kf.affineBrightness(), static_cast<size_t>(lvl), *model,
-                          energy::problem::FrameParameterization::kFixed);
+                          reference_frame_depth_map, last_kf.exposureTime(), last_kf.affineBrightness(),
+                          static_cast<size_t>(lvl), *model, energy::problem::FrameParameterization::kFixed);
       }
-      solver->pushFrame(timestamp, t_w_t, pyramids, masks, affine_brightness, static_cast<size_t>(lvl), *model,
-                        energy::problem::FrameParameterization::kFree);
+      solver->pushFrame(timestamp, t_w_t, pyramids, masks, exposure_time, affine_brightness, static_cast<size_t>(lvl),
+                        *model, energy::problem::FrameParameterization::kFree);
 
       Precision rmse = solver->solve(number_of_threads);
       if (rmse < kEnergyRatioThreshold * local_rmse_last_pose_estimation[static_cast<size_t>(lvl)]) {
@@ -447,7 +448,7 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
 
     estimatePose<Motion, Model, Grid2D, kFrontendPatternSize, kFrontendChannelsNumber>(
         odometry_track, pose_aligner_.get(), pyramids, features.timestamp(), pyramid_of_masks, t_w_t, t_r_t,
-        affine_brightness, sensor_id_, calibration_, reference_frame_depth_map_, number_of_threads,
+        exposure_time, affine_brightness, sensor_id_, calibration_, reference_frame_depth_map_, number_of_threads,
         rmse_last_pose_estimation_);
 
     auto model = calibration_.cameraModel<Model>();
