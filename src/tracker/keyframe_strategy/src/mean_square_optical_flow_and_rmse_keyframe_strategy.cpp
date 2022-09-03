@@ -13,7 +13,9 @@ MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>::MeanSquareOpticalFlowAndRm
 template <energy::motion::Motion Motion>
 bool MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>::needNewKeyframe(
     const track::ActiveOdometryTrack<Motion> &track, const track::SLAMInternalTrackingFrame<Motion> &frame) {
+  const Precision lask_kf_exposure_time = track.activeFrames().back()->exposureTime();
   const auto &last_kf_affine_brightness = track.activeFrames().back()->affineBrightness();
+  const Precision frame_exposure_time = frame.exposureTime();
   const auto &frame_affine_brightness = frame.affineBrightness();
 
   const double mean_square_optical_flow = frame.meanSquareOpticalFlow();
@@ -26,7 +28,9 @@ bool MeanSquareOpticalFlowAndRmseKeyframeStrategy<Motion>::needNewKeyframe(
   bool need_new_keyframe =
       factor_ * (kMaxShiftWeight_ * mean_square_optical_flow +
                  kMaxShiftWithoutRotationWeight_ * mean_square_optical_flow_without_rotation +
-                 kMaxAffineBrightnessWeight_ * std::abs(frame_affine_brightness[0] - last_kf_affine_brightness[0])) >
+                 kMaxAffineBrightnessWeight_ *
+                     std::abs(std::log((frame_exposure_time / lask_kf_exposure_time) *
+                                       std::exp(frame_affine_brightness[0] - last_kf_affine_brightness[0])))) >
           kThreshold_ ||
       (frame.poseRmse() / rmse_ > kMaxExcessOffEnergy_);
 
