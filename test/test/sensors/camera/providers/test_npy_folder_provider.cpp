@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 
 namespace dsopp::sensors::providers {

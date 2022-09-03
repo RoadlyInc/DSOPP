@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "energy/motion/se3_motion.hpp"
 #include "features/camera/camera_features.hpp"

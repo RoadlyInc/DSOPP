@@ -5,6 +5,7 @@
 #include <sophus/se3.hpp>
 
 #include "agent/agent.hpp"
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "energy/projector/camera_reproject.hpp"
 #include "features/camera/camera_features.hpp"

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 
 namespace dsopp::sensors::providers {
@@ -76,8 +77,8 @@ TEST_F(testProvider, losslessReadingTest) {
 
 TEST_F(testProvider, readGrayscale) {
   const bool read_grayscale = true;
-  const size_t timestamps_count = test_video_frame_count_;
-  ImageVideoProvider provider(video_path_, timestamp_path_, 0, test_video_frame_count_, timestamps_count,
+  const size_t timestamps_frame_id = 0;
+  ImageVideoProvider provider(video_path_, timestamp_path_, 0, test_video_frame_count_, timestamps_frame_id,
                               read_grayscale);
   cv::Mat provider_image = provider.nextFrame()->data();
   EXPECT_EQ(provider_image.type(), CV_8UC1);

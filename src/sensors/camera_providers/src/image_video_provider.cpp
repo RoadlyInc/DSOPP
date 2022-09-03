@@ -5,7 +5,7 @@
 #include <glog/logging.h>
 #include <opencv2/highgui.hpp>
 
-#include "common/file_tools/timestamps.hpp"
+#include "common/file_tools/camera_frame_times.hpp"
 
 namespace dsopp::sensors::providers {
 namespace {
@@ -32,7 +32,7 @@ ImageVideoProvider::ImageVideoProvider(const std::string& path, const std::strin
 
   skipFrames(video_reader_, timestamps_frame_id_, start_frame);
 
-  readTimestamps(timestamps_file, timestamps_);
+  common::file_tools::readTimes(timestamps_file, times_);
   // read image size
   image_size_ << static_cast<Precision>(video_reader_.get(cv::CAP_PROP_FRAME_WIDTH)),
       static_cast<Precision>(video_reader_.get(cv::CAP_PROP_FRAME_HEIGHT));
@@ -50,11 +50,11 @@ std::unique_ptr<CameraDataFrame> ImageVideoProvider::nextFrame() {
     if (image.type() != CV_8UC1) cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
   }
 
-  if (timestamps_.count(timestamps_frame_id_) == 0) {
-    LOG(WARNING) << "There is no timestamp in the frame with id: " << current_frame_id_;
+  if (times_.count(timestamps_frame_id_) == 0) {
+    LOG(FATAL) << "There is no timestamp in the frame with id: " << timestamps_frame_id_;
   }
 
-  uint64_t timestamp = timestamps_[timestamps_frame_id_];
+  uint64_t timestamp = times_.at(timestamps_frame_id_).timestamp;
   current_frame_id_++;
   return std::make_unique<CameraDataFrame>(timestamps_frame_id_++, std::move(image),
                                            time(std::chrono::nanoseconds(timestamp)));

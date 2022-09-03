@@ -9,6 +9,10 @@
 #include "sensors/camera_providers/camera_data_frame.hpp"
 #include "sensors/camera_providers/camera_provider.hpp"
 
+namespace dsopp::common::file_tools {
+struct CameraFrameTimes;
+}  // namespace dsopp::common::file_tools
+
 namespace dsopp::sensors::providers {
 
 /**
@@ -55,8 +59,8 @@ class NpyFolderProvider final : public CameraProvider {
   std::map<std::string, size_t> file_paths_;
   /** Container containing camera frames in frame_id order */
   std::deque<std::unique_ptr<CameraDataFrame>> frame_batch_;
-  /** Container containing timestamps */
-  std::map<uint64_t, uint64_t> timestamps_;
+  /** Container containing times */
+  std::map<uint64_t, dsopp::common::file_tools::CameraFrameTimes> times_;
   /** frame id in timestamps */
   size_t timestamps_frame_id_;
 };

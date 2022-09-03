@@ -6,7 +6,7 @@
 
 #include <glog/logging.h>
 
-#include "common/file_tools/timestamps.hpp"
+#include "common/file_tools/camera_frame_times.hpp"
 
 namespace dsopp {
 namespace sensors {
@@ -62,7 +62,7 @@ ImageFolderProvider::ImageFolderProvider(const std::string &path, const std::str
                                          size_t start_frame, size_t end_frame, bool convert_to_grayscale)
     : CameraProvider(start_frame, end_frame, convert_to_grayscale), batch_size_(batch_size) {
   readImages(path, file_paths_);
-  readTimestamps(timestamps_file, timestamps_);
+  common::file_tools::readTimes(timestamps_file, times_);
   skipFrames(file_paths_, start_frame);
   // read image size
   auto frame_data = cv::imread(file_paths_.begin()->second);
@@ -79,11 +79,10 @@ void ImageFolderProvider::fillBatch() {
     else
       frame_data = cv::imread(file_paths_iter->second);
     size_t frame_id = file_paths_iter->first;
-    if (timestamps_.count(frame_id) == 0) {
-      LOG(WARNING) << "There is no timestamp in the frame with id: " << frame_id;
-      return;
+    if (times_.count(frame_id) == 0) {
+      LOG(FATAL) << "There is no timestamp in the frame with id: " << frame_id;
     }
-    uint64_t timestamp = timestamps_[frame_id];
+    uint64_t timestamp = times_.at(frame_id).timestamp;
     frame_batch_.push_back(
         std::make_unique<CameraDataFrame>(frame_id, std::move(frame_data), time(std::chrono::nanoseconds(timestamp))));
     file_paths_iter++;

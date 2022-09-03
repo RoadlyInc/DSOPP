@@ -2,6 +2,7 @@
 
 #include <glog/logging.h>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "sensors/camera_providers/image_folder_provider.hpp"
 #include "sensors/camera_providers/image_video_provider.hpp"
 #include "sensors/camera_providers/npy_folder_provider.hpp"

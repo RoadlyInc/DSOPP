@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "common/time/time.hpp"
 #include "energy/motion/motion.hpp"

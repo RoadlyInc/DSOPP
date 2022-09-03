@@ -5,6 +5,7 @@
 #include <sophus/se3.hpp>
 
 #include "agent/agent.hpp"
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "energy/epipolar_geometry/epipolar_line.hpp"
 #include "energy/epipolar_geometry/epipolar_line_builder.hpp"

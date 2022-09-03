@@ -1,6 +1,7 @@
 
 #include "sensors/camera_calibration/mask/camera_mask.hpp"
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "common/time/time.hpp"
 #include "feature_based_slam/features/distinct_feature.hpp"

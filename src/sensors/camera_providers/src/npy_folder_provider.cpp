@@ -6,7 +6,7 @@
 #include <cnpy.h>
 #include <glog/logging.h>
 
-#include "common/file_tools/timestamps.hpp"
+#include "common/file_tools/camera_frame_times.hpp"
 
 namespace dsopp {
 namespace sensors {
@@ -70,7 +70,7 @@ NpyFolderProvider::NpyFolderProvider(const std::string &path, const std::string 
                                      size_t end_frame, size_t timestamps_frame_id, bool convert_to_grayscale)
     : CameraProvider(start_frame, end_frame, convert_to_grayscale), timestamps_frame_id_(timestamps_frame_id) {
   readFiles(path, file_paths_);
-  readTimestamps(timestamps_file, timestamps_);
+  common::file_tools::readTimes(timestamps_file, times_);
   skipFrames(file_paths_, timestamps_frame_id_, start_frame);
   fillBatch();
   // read image size
@@ -89,11 +89,11 @@ void NpyFolderProvider::fillBatch() {
     size_t width = npy_raw_data.shape[2];
     cv::Mat frame_data(static_cast<int>(height), static_cast<int>(width), CV_8UC1, &data[i * width * height]);
 
-    if (timestamps_.count(timestamps_frame_id_) == 0) {
-      LOG(WARNING) << "There is no timestamp in the frame with id: " << timestamps_frame_id_;
+    if (times_.count(timestamps_frame_id_) == 0) {
+      LOG(FATAL) << "There is no timestamp in the frame with id: " << timestamps_frame_id_;
     }
 
-    uint64_t timestamp = timestamps_[timestamps_frame_id_];
+    uint64_t timestamp = times_.at(timestamps_frame_id_).timestamp;
     frame_batch_.push_back(std::make_unique<CameraDataFrame>(timestamps_frame_id_++, frame_data.clone(),
                                                              time(std::chrono::nanoseconds(timestamp))));
   }
