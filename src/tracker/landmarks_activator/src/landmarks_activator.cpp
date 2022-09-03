@@ -125,13 +125,15 @@ class LandmarkActivationProblem {
 
  public:
   LandmarkActivationProblem(const Eigen::Matrix<Precision, Pattern::kSize, 1> &reference_patch,
-                            size_t reference_frame_id, const Eigen::Vector2<Precision> &reference_affine_brightness,
-                            size_t sensor, const std::deque<track::ActiveKeyframe<Motion> *> &frames,
-                            const Model &model, const Precision sigma_huber_loss,
+                            size_t reference_frame_id, const Precision reference_exposure_time,
+                            const Eigen::Vector2<Precision> &reference_affine_brightness, size_t sensor,
+                            const std::deque<track::ActiveKeyframe<Motion> *> &frames, const Model &model,
+                            const Precision sigma_huber_loss,
                             const Eigen::Matrix<Precision, 2, Pattern::kSize> &reference_pattern, const Motion &t_w_r,
                             Precision &idepth)
       : reference_patch_(reference_patch),
         reference_frame_id_(reference_frame_id),
+        reference_exposure_time_(reference_exposure_time),
         reference_affine_brightness_(reference_affine_brightness),
         sensor_(sensor),
         frames_(frames),
@@ -156,7 +158,8 @@ class LandmarkActivationProblem {
       }
       const auto &target_mask = target_frame->getMask(sensor_, 0);
       auto &target_affine_brightness = target_frame->affineBrightness();
-      Precision brightness_change_scale = std::exp(target_affine_brightness[0] - reference_affine_brightness_[0]);
+      Precision brightness_change_scale = (target_frame->exposureTime() / reference_exposure_time_) *
+                                          std::exp(target_affine_brightness[0] - reference_affine_brightness_[0]);
 
       auto t_t_r = target_frame->tWorldAgent().inverse() * t_w_r_;
       energy::reprojection::ArrayReprojector<Precision, Model, typename Motion::Product> reprojector(model_, t_t_r);
@@ -204,7 +207,8 @@ class LandmarkActivationProblem {
       }
       const auto &target_mask = target_frame->getMask(sensor_, 0);
       auto &target_affine_brightness = target_frame->affineBrightness();
-      Precision brightness_change_scale = std::exp(target_affine_brightness[0] - reference_affine_brightness_[0]);
+      Precision brightness_change_scale = (target_frame->exposureTime() / reference_exposure_time_) *
+                                          std::exp(target_affine_brightness[0] - reference_affine_brightness_[0]);
 
       auto t_t_r = target_frame->tWorldAgent().inverse() * t_w_r_;
       energy::reprojection::ArrayReprojector<Precision, Model, typename Motion::Product> reprojector(model_, t_t_r);
@@ -258,6 +262,7 @@ class LandmarkActivationProblem {
  private:
   const Eigen::Matrix<Precision, Pattern::kSize, 1> &reference_patch_;
   size_t reference_frame_id_;
+  const Precision reference_exposure_time_;
   const Eigen::Vector2<Precision> &reference_affine_brightness_;
   size_t sensor_;
   const std::deque<track::ActiveKeyframe<Motion> *> &frames_;
@@ -276,9 +281,9 @@ class LandmarkActivationProblem {
 template <energy::motion::Motion Motion, typename Model, template <int> typename Grid2D, int C>
 typename track::ActiveKeyframe<Motion>::ImmatureLandmarkActivationStatus optimizeImmatureLandmark(
     track::landmarks::ImmatureTrackingLandmark &landmark, size_t reference_frame_id,
-    const Eigen::Vector2<Precision> &reference_affine_brightness, size_t sensor,
-    const std::deque<track::ActiveKeyframe<Motion> *> &frames, const Model &model, const int minimum_inliers,
-    const Motion &t_w_r, const Precision sigma_huber_loss) {
+    const Precision reference_exposure_time, const Eigen::Vector2<Precision> &reference_affine_brightness,
+    size_t sensor, const std::deque<track::ActiveKeyframe<Motion> *> &frames, const Model &model,
+    const int minimum_inliers, const Motion &t_w_r, const Precision sigma_huber_loss) {
   using ImmaturePointActivationAction = typename track::ActiveKeyframe<Motion>::ImmatureLandmarkActivationStatus;
 
   energy::levenberg_marquardt_algorithm::Options options;
@@ -292,9 +297,9 @@ typename track::ActiveKeyframe<Motion>::ImmatureLandmarkActivationStatus optimiz
   Eigen::Matrix<Precision, 2, Pattern::kSize> reference_pattern;
   features::PatternPatch::shiftPattern(landmark.projection(), reference_pattern);
   Precision idepth = landmark.idepth();
-  LandmarkActivationProblem<Motion, Model, Grid2D, C> problem(landmark.patch(), reference_frame_id,
-                                                              reference_affine_brightness, sensor, frames, model,
-                                                              sigma_huber_loss, reference_pattern, t_w_r, idepth);
+  LandmarkActivationProblem<Motion, Model, Grid2D, C> problem(
+      landmark.patch(), reference_frame_id, reference_exposure_time, reference_affine_brightness, sensor, frames, model,
+      sigma_huber_loss, reference_pattern, t_w_r, idepth);
   auto result = energy::levenberg_marquardt_algorithm::solve(problem, options);
 
   if (result.number_of_valid_residuals < minimum_inliers || idepth < 0) {
@@ -325,7 +330,7 @@ void optimizeImmatureLandmarks(
         }
         status = optimizeImmatureLandmark<Motion, Model, Grid2D, C>(
             reference_frame.getImmatureLandmark(sensor, landmark_idx), reference_frame.id(),
-            reference_frame.affineBrightness(), sensor, track.activeFrames(), model,
+            reference_frame.exposureTime(), reference_frame.affineBrightness(), sensor, track.activeFrames(), model,
             std::min(minimum_inliers, static_cast<int>(track.activeFrames().size()) - 1), reference_frame.tWorldAgent(),
             sigma_huber_loss);
       }
