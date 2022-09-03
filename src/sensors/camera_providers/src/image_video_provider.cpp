@@ -55,8 +55,9 @@ std::unique_ptr<CameraDataFrame> ImageVideoProvider::nextFrame() {
   }
 
   uint64_t timestamp = times_.at(timestamps_frame_id_).timestamp;
+  Precision exposure_time = times_.at(timestamps_frame_id_).exposure_time;
   current_frame_id_++;
-  return std::make_unique<CameraDataFrame>(timestamps_frame_id_++, std::move(image),
+  return std::make_unique<CameraDataFrame>(timestamps_frame_id_++, std::move(image), exposure_time,
                                            time(std::chrono::nanoseconds(timestamp)));
 }
 

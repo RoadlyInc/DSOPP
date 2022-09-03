@@ -94,7 +94,8 @@ void NpyFolderProvider::fillBatch() {
     }
 
     uint64_t timestamp = times_.at(timestamps_frame_id_).timestamp;
-    frame_batch_.push_back(std::make_unique<CameraDataFrame>(timestamps_frame_id_++, frame_data.clone(),
+    Precision exposure_time = times_.at(timestamps_frame_id_).exposure_time;
+    frame_batch_.push_back(std::make_unique<CameraDataFrame>(timestamps_frame_id_++, frame_data.clone(), exposure_time,
                                                              time(std::chrono::nanoseconds(timestamp))));
   }
   file_paths_.erase(file_paths_.begin());

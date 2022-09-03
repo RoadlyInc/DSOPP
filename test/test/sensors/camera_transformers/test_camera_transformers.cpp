@@ -139,7 +139,8 @@ TEST(testCameraTransformers, cameraWithTransformsTest) {
 
     auto provider = std::make_unique<providers::MockCameraProvider>();
 
-    auto *data_frame = new providers::CameraDataFrame(0, std::move(image), dsopp::time(std::chrono::milliseconds(0)));
+    auto *data_frame =
+        new providers::CameraDataFrame(0, std::move(image), 1, dsopp::time(std::chrono::milliseconds(0)));
 
     EXPECT_CALL(*provider, nextFrameProxy()).WillOnce(::testing::Return(data_frame));
     auto calib = calibration::CameraCalibration(Eigen::Vector2<Precision>(cols_image, rows_image),

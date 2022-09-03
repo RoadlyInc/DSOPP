@@ -61,10 +61,10 @@ TEST(affine_brightness, affine_brightness) {
   cv::Mat mock_image_2;
   image_1.convertTo(mock_image_2, CV_8UC1, kGtA, kGtB);
 
-  auto mock_data_frame_1 =
-      new sensors::providers::CameraDataFrame(data_frame_1->id(), std::move(mock_image_1), data_frame_1->timestamp());
-  auto mock_data_frame_2 =
-      new sensors::providers::CameraDataFrame(data_frame_2->id(), std::move(mock_image_2), data_frame_2->timestamp());
+  auto mock_data_frame_1 = new sensors::providers::CameraDataFrame(data_frame_1->id(), std::move(mock_image_1), 1,
+                                                                   data_frame_1->timestamp());
+  auto mock_data_frame_2 = new sensors::providers::CameraDataFrame(data_frame_2->id(), std::move(mock_image_2), 1,
+                                                                   data_frame_2->timestamp());
 
   int counter = 0;
 

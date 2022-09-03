@@ -83,8 +83,9 @@ void ImageFolderProvider::fillBatch() {
       LOG(FATAL) << "There is no timestamp in the frame with id: " << frame_id;
     }
     uint64_t timestamp = times_.at(frame_id).timestamp;
-    frame_batch_.push_back(
-        std::make_unique<CameraDataFrame>(frame_id, std::move(frame_data), time(std::chrono::nanoseconds(timestamp))));
+    Precision exposure_time = times_.at(frame_id).exposure_time;
+    frame_batch_.push_back(std::make_unique<CameraDataFrame>(frame_id, std::move(frame_data), exposure_time,
+                                                             time(std::chrono::nanoseconds(timestamp))));
     file_paths_iter++;
   }
   file_paths_.erase(file_paths_.begin(), file_paths_iter);
