@@ -1,18 +1,8 @@
 get_target_property(TRACKER_INCLUDES tracker INCLUDE_DIRECTORIES)
 get_target_property(PROBLEMS_INCLUDES problems INCLUDE_DIRECTORIES)
 
-dsopp_add_test(
-  test_affine_brightness
-  test_affine_brightness.cpp
-  problems
-  sensors
-  features
-  test_tools
-  ceres
-  eigen
-  time
-  gmock
-  settings)
+dsopp_add_test(test_affine_brightness test_affine_brightness.cpp test_tools
+               problems)
 
 target_include_directories(test_affine_brightness PRIVATE ${TRACKER_INCLUDES})
 
