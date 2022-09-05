@@ -74,7 +74,6 @@ struct NormalLinearSystem {
   /**
    * operator to find new system (H1 + H2)x = b1+b2
    * @param other linear system to add (H2)
-   * @return  sum of 2 systems
    */
   void operator+=(const NormalLinearSystem &other) {
     H += other.H;
