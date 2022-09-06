@@ -95,8 +95,10 @@ class CeresPoseAlignmentTest : public ::testing::Test {
 
     Eigen::MatrixX<Precision> depth = readDepth(depth_img1, H, W);
 
-    auto data_frame1 = new sensors::providers::CameraDataFrame(0, std::move(img1), timeC(std::chrono::milliseconds(0)));
-    auto data_frame2 = new sensors::providers::CameraDataFrame(1, std::move(img2), timeC(std::chrono::milliseconds(1)));
+    auto data_frame1 =
+        new sensors::providers::CameraDataFrame(0, std::move(img1), 1, timeC(std::chrono::milliseconds(0)));
+    auto data_frame2 =
+        new sensors::providers::CameraDataFrame(1, std::move(img2), 1, timeC(std::chrono::milliseconds(1)));
 
     auto provider = std::make_unique<sensors::providers::MockCameraProvider>();
 
@@ -190,7 +192,7 @@ class CeresPoseAlignmentTest : public ::testing::Test {
   template <class Solver>
   Sophus::SE3<Precision> solve(Solver &solver, const Sophus::SE3<Precision> &init, size_t level) {
     solver.pushFrame(track.getActiveKeyframe(0), level, *model, energy::problem::FrameParameterization::kFixed);
-    solver.pushFrame(features[1]->timestamp(), init, pyramids_, {{sensor, camera->pyramidOfMasks()[0]}},
+    solver.pushFrame(features[1]->timestamp(), init, pyramids_, {{sensor, camera->pyramidOfMasks()[0]}}, 1,
                      Eigen::Vector2<Precision>::Zero(), level, *model);
     solver.solve(4);
     auto t_cam1_cam2 = track.getActiveKeyframe(0).tWorldAgent().inverse() * solver.getPose(features[1]->timestamp());

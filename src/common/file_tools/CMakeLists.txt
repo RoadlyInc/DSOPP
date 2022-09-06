@@ -1,5 +1,5 @@
 add_library(common_file_tools src/parsing.cpp src/read_tum_poses.cpp
-                              src/timestamps.cpp)
+                              src/camera_frame_times.cpp)
 
 target_include_directories(
   common_file_tools

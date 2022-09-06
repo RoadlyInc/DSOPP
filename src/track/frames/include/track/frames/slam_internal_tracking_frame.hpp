@@ -21,6 +21,7 @@ class SLAMInternalTrackingFrame : public TrackingFrame<Motion> {
    * @param timestamp timestamps of the frame
    * @param t_world_keyframe transformation from keyframe to world
    * @param t_keyframe_agent transformation from agent to keyframe
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param mean_square_optical_flow mean square optical flow from keyframe to frame
    * @param mean_square_optical_flow_without_rotation mean square optical flow without rotation from keyframe to frame
@@ -28,7 +29,7 @@ class SLAMInternalTrackingFrame : public TrackingFrame<Motion> {
    * @param reliable pose estimation was reliable
    */
   SLAMInternalTrackingFrame(size_t id, time timestamp, const Motion& t_world_keyframe,
-                            const typename Motion::Product& t_keyframe_agent,
+                            const typename Motion::Product& t_keyframe_agent, const Precision exposure_time,
                             const Eigen::Vector<Precision, 2>& affine_brightness,
                             Precision mean_square_optical_flow = 0,
                             Precision mean_square_optical_flow_without_rotation = 0, Precision pose_rmse = 0,

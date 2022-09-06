@@ -8,6 +8,9 @@
 #include "sensors/camera_providers/camera_provider.hpp"
 
 namespace dsopp {
+namespace common::file_tools {
+struct CameraFrameTimes;
+}  // namespace common::file_tools
 namespace sensors {
 namespace providers {
 /**
@@ -56,8 +59,8 @@ class ImageFolderProvider final : public CameraProvider {
   std::map<uint32_t, std::string> file_paths_;
   /** Container containing camera frames in frame_id order */
   std::deque<std::unique_ptr<CameraDataFrame>> frame_batch_;
-  /** Container containing timestamps */
-  std::map<uint64_t, uint64_t> timestamps_;
+  /** Container containing times */
+  std::map<uint64_t, common::file_tools::CameraFrameTimes> times_;
 };
 }  // namespace providers
 }  // namespace sensors

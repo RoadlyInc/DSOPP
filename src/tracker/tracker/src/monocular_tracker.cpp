@@ -55,9 +55,10 @@ void pushNewKeyframe(track::ActiveOdometryTrack<Motion> &track, size_t frame_id,
                      features::CameraFeatures::PyramidOfMasks &&pyramid_of_masks,
                      const features::TrackingFeaturesFrame &features_frame, const Model &model,
                      std::unique_ptr<cv::Mat> &&semantics_data, const cv::Mat &raw_image,
+                     const Precision exposure_time = 1,
                      const Eigen::Vector2<Precision> &affine_brightness = Eigen::Vector2<Precision>::Zero(),
                      bool save_images_to_track = false) {
-  track.pushFrame(frame_id, timestamp, t_world_agent, affine_brightness);
+  track.pushFrame(frame_id, timestamp, t_world_agent, exposure_time, affine_brightness);
 
   if (save_images_to_track) track.lastKeyframe().pushImage(sensor, raw_image);
   track.lastKeyframe().pushPyramid(sensor, std::move(pyramid));
@@ -74,13 +75,15 @@ template <energy::motion::Motion Motion, energy::model::Model Model, typename De
           template <int> typename Grid2D, int C>
 
 void estimateDepths(track::ActiveOdometryTrack<Motion> &track, const Motion &t_world_agent,
-                    const Eigen::Vector2<Precision> &target_affine_brightness, const size_t &sensor,
-                    const Grid2D<C> &pyramid, const sensors::calibration::CameraCalibration &calibration,
+                    const Precision target_exposure_time, const Eigen::Vector2<Precision> &target_affine_brightness,
+                    const size_t &sensor, const Grid2D<C> &pyramid,
+                    const sensors::calibration::CameraCalibration &calibration,
                     const sensors::calibration::CameraMask &camera_mask, const Precision sigma_huber_loss) {
   std::vector<std::reference_wrapper<track::landmarks::ImmatureTrackingLandmark>> landmarks;
   for (size_t k = 0; k < track.activeFrames().size(); k++) {
     auto &keyframe = track.getActiveKeyframe(k);
     auto t_keyframe_agent = keyframe.tWorldAgent().inverse() * t_world_agent;
+    const Precision reference_exposure_time = keyframe.exposureTime();
     const auto &reference_affine_brightness = keyframe.affineBrightness();
 
     landmarks.clear();
@@ -93,8 +96,8 @@ void estimateDepths(track::ActiveOdometryTrack<Motion> &track, const Motion &t_w
     }
 
     DepthEstimator::template estimate<typename Motion::Product, Grid2D, Model, 1>(
-        pyramid, landmarks, t_keyframe_agent.inverse(), reference_affine_brightness, target_affine_brightness,
-        calibration, camera_mask, sigma_huber_loss);
+        pyramid, landmarks, t_keyframe_agent.inverse(), reference_exposure_time, reference_affine_brightness,
+        target_exposure_time, target_affine_brightness, calibration, camera_mask, sigma_huber_loss);
   }
 }
 
@@ -174,7 +177,8 @@ bool estimatePose(track::ActiveOdometryTrack<Motion> &track,
                   energy::problem::PoseAlignment<Motion, Model, PatternSize, Grid2D, C> *solver,
                   const typename track::ActiveKeyframe<Motion>::Pyramids &pyramids, time timestamp,
                   const std::vector<sensors::calibration::CameraMask> &pyramid_of_masks, Motion &t_w_t,
-                  typename Motion::Product &t_r_t, Eigen::Vector2<Precision> &affine_brightness, const size_t sensor_id,
+                  typename Motion::Product &t_r_t, const Precision exposure_time,
+                  Eigen::Vector2<Precision> &affine_brightness, const size_t sensor_id,
                   const sensors::calibration::CameraCalibration &calibration,
                   const std::map<size_t, std::vector<energy::problem::DepthMap>> &reference_frame_depth_map,
                   const size_t number_of_threads, std::vector<Precision> &rmse_last_pose_estimation) {
@@ -200,11 +204,11 @@ bool estimatePose(track::ActiveOdometryTrack<Motion> &track,
       if (!track.empty()) {
         const auto &last_kf = track.lastKeyframe();
         solver->pushFrame(last_kf.timestamp(), last_kf.tWorldAgent(), last_kf.pyramids(), masks,
-                          reference_frame_depth_map, last_kf.affineBrightness(), static_cast<size_t>(lvl), *model,
-                          energy::problem::FrameParameterization::kFixed);
+                          reference_frame_depth_map, last_kf.exposureTime(), last_kf.affineBrightness(),
+                          static_cast<size_t>(lvl), *model, energy::problem::FrameParameterization::kFixed);
       }
-      solver->pushFrame(timestamp, t_w_t, pyramids, masks, affine_brightness, static_cast<size_t>(lvl), *model,
-                        energy::problem::FrameParameterization::kFree);
+      solver->pushFrame(timestamp, t_w_t, pyramids, masks, exposure_time, affine_brightness, static_cast<size_t>(lvl),
+                        *model, energy::problem::FrameParameterization::kFree);
 
       Precision rmse = solver->solve(number_of_threads);
       if (rmse < kEnergyRatioThreshold * local_rmse_last_pose_estimation[static_cast<size_t>(lvl)]) {
@@ -439,11 +443,12 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
     const auto &pyramid_of_masks = features.pyramidOfMasks();
     Motion t_w_t;
     typename Motion::Product t_r_t;
+    const Precision exposure_time = features.exposureTime();
     Eigen::Vector2<Precision> affine_brightness = Eigen::Vector2<Precision>::Zero();
 
     estimatePose<Motion, Model, Grid2D, kFrontendPatternSize, kFrontendChannelsNumber>(
         odometry_track, pose_aligner_.get(), pyramids, features.timestamp(), pyramid_of_masks, t_w_t, t_r_t,
-        affine_brightness, sensor_id_, calibration_, reference_frame_depth_map_, number_of_threads,
+        exposure_time, affine_brightness, sensor_id_, calibration_, reference_frame_depth_map_, number_of_threads,
         rmse_last_pose_estimation_);
 
     auto model = calibration_.cameraModel<Model>();
@@ -453,7 +458,7 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
       pushNewKeyframe<Motion, Model>(odometry_track, features.id(), features.timestamp(), t_w_t, sensor_id_,
                                      std::move(pyramids[sensor_id_]), features.movePyramidOfMasks(),
                                      tracking_features_frame, *model, features.moveSemanticsData(), features.image(),
-                                     affine_brightness, save_images_to_track_);
+                                     exposure_time, affine_brightness, save_images_to_track_);
       photometric_bundle_adjustment_->pushFrame(odometry_track.lastKeyframe(), 0, *model,
                                                 energy::problem::FrameParameterization::kFixed);
       updateSolver(*photometric_bundle_adjustment_, odometry_track);
@@ -461,8 +466,8 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
       return;
     }
 
-    estimateDepths<Motion, Model, DepthEstimator, Grid2D, 1>(odometry_track, t_w_t, affine_brightness, sensor_id_,
-                                                             (pyramids[sensor_id_])[0], calibration_,
+    estimateDepths<Motion, Model, DepthEstimator, Grid2D, 1>(odometry_track, t_w_t, exposure_time, affine_brightness,
+                                                             sensor_id_, (pyramids[sensor_id_])[0], calibration_,
                                                              pyramid_of_masks[0], kHuberLossSigma);
 
     auto t_t_r = t_r_t.inverse();
@@ -473,9 +478,9 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
         calculateMeanSquareOpticalFlow<typename Motion::Product, Model>(reference_frame_depth_map_.at(sensor_id_)[0],
                                                                         t_t_r, *model);
     auto t_w_r = t_w_t * t_t_r;
-    auto frame = track::SLAMInternalTrackingFrame(features.id(), features.timestamp(), t_w_r, t_r_t, affine_brightness,
-                                                  mean_square_optical_flow, mean_square_optical_flow_without_rotation,
-                                                  rmse_last_pose_estimation_[0]);
+    auto frame = track::SLAMInternalTrackingFrame(
+        features.id(), features.timestamp(), t_w_r, t_r_t, exposure_time, affine_brightness, mean_square_optical_flow,
+        mean_square_optical_flow_without_rotation, rmse_last_pose_estimation_[0]);
 
     if (this->camera_output_interface_.current_frame) {
       this->camera_output_interface_.current_frame->pushImage(debugCurrentFrame(features));
@@ -486,7 +491,7 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
       pushNewKeyframe<Motion, Model>(odometry_track, features.id(), features.timestamp(), t_w_t, sensor_id_,
                                      std::move(pyramids[sensor_id_]), features.movePyramidOfMasks(),
                                      tracking_features_frame, *model, features.moveSemanticsData(), features.image(),
-                                     affine_brightness, save_images_to_track_);
+                                     exposure_time, affine_brightness, save_images_to_track_);
       landmarks_activator_->activate(odometry_track);
 
       photometric_bundle_adjustment_->pushFrame(odometry_track.lastKeyframe(), 0, *model);
@@ -510,7 +515,7 @@ MonocularTracker<Motion, Model, DepthEstimator, Grid2D, FRAME_EMBEDDER>::tick(
 
     } else {
       odometry_track.lastKeyframe().attachTrackingFrame(
-          features.id(), features.timestamp(), t_r_t, affine_brightness, mean_square_optical_flow,
+          features.id(), features.timestamp(), t_r_t, exposure_time, affine_brightness, mean_square_optical_flow,
           mean_square_optical_flow_without_rotation, rmse_last_pose_estimation_[0]);
       // TODO add option to save images to attached frames
       // odometry_track.lastKeyframe().lastAttachedFrame().pushImage(sensor_id_,

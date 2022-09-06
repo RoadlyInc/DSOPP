@@ -60,6 +60,7 @@ void PhotometricBundleAdjustment<Scalar, Motion, Model, PatternSize, Grid2D, OPT
                                  C>::pushFrame(time timestamp, const Motion &t_world_agent, const Pyramids &pyramids,
                                                const std::map<size_t, const sensors::calibration::CameraMask &> &masks,
                                                const std::map<size_t, std::vector<DepthMap>> &depths_maps,
+                                               const Precision exposure_time,
                                                const Eigen::Vector2<Precision> &affine_brightness, size_t level,
                                                const Model &model, FrameParameterization frame_parameterization) {
   if (not frames_.empty() and frames_.back()->timestamp > timestamp) {
@@ -68,8 +69,8 @@ void PhotometricBundleAdjustment<Scalar, Motion, Model, PatternSize, Grid2D, OPT
   }
 
   frames_.push_back(std::make_unique<LocalFrame<Scalar, Motion, Model, PatternSize, Grid2D, C>>(
-      timestamp, t_world_agent, pyramids, masks, depths_maps, affine_brightness.template cast<Scalar>(), level, model,
-      frame_parameterization));
+      timestamp, t_world_agent, pyramids, masks, depths_maps, static_cast<Scalar>(exposure_time),
+      affine_brightness.template cast<Scalar>(), level, model, frame_parameterization));
 }
 template <typename Scalar, energy::motion::Motion Motion, model::Model Model, int PatternSize,
           template <int> typename Grid2D, bool OPTIMIZE_POSES, bool OPTIMIZE_IDEPTHS, bool FIRST_ESTIMATE_JACOBIANS,
@@ -79,15 +80,15 @@ void PhotometricBundleAdjustment<
     C>::pushFrame(time timestamp, const Motion &t_world_agent, const Pyramids &pyramids,
                   const std::map<size_t, const sensors::calibration::CameraMask &> &masks,
                   const std::map<size_t, std::vector<track::landmarks::TrackingLandmark>> &tracking_landmarks,
-                  const Eigen::Vector2<Precision> &affine_brightness, const Model &model, size_t level,
-                  Precision level_resize_ratio, FrameParameterization frame_parameterization) {
+                  const Precision exposure_time, const Eigen::Vector2<Precision> &affine_brightness, const Model &model,
+                  size_t level, Precision level_resize_ratio, FrameParameterization frame_parameterization) {
   if (not frames_.empty() and frames_.back()->timestamp > timestamp) {
     LOG(ERROR) << "Frames must be processed in ascending order of time";
     return;
   }
   frames_.push_back(std::make_unique<LocalFrame<Scalar, Motion, Model, PatternSize, Grid2D, C>>(
-      timestamp, t_world_agent, pyramids, masks, tracking_landmarks, affine_brightness.template cast<Scalar>(), model,
-      level, level_resize_ratio, frame_parameterization));
+      timestamp, t_world_agent, pyramids, masks, tracking_landmarks, static_cast<Scalar>(exposure_time),
+      affine_brightness.template cast<Scalar>(), model, level, level_resize_ratio, frame_parameterization));
 }
 
 template <typename Scalar, energy::motion::Motion Motion, model::Model Model, int PatternSize,
@@ -130,6 +131,7 @@ void PhotometricBundleAdjustment<Scalar, Motion, Model, PatternSize, Grid2D, OPT
                                  C>::pushFrame(time timestamp, const Motion &t_world_agent_init,
                                                const Pyramids &pyramids,
                                                const std::map<size_t, const sensors::calibration::CameraMask &> &masks,
+                                               const Precision exposure_time,
                                                const Eigen::Vector2<Precision> &affine_brightness, size_t level,
                                                const Model &model, FrameParameterization frame_parameterization) {
   if (not frames_.empty() and frames_.back()->timestamp > timestamp) {
@@ -147,8 +149,8 @@ void PhotometricBundleAdjustment<Scalar, Motion, Model, PatternSize, Grid2D, OPT
   }
 
   frames_.push_back(std::make_unique<LocalFrame<Scalar, Motion, Model, PatternSize, Grid2D, C>>(
-      timestamp, t_world_agent_init, pyramids, masks, affine_brightness.template cast<Scalar>(), false, level, model,
-      frame_parameterization));
+      timestamp, t_world_agent_init, pyramids, masks, static_cast<Scalar>(exposure_time),
+      affine_brightness.template cast<Scalar>(), false, level, model, frame_parameterization));
 }
 
 template <typename Scalar, energy::motion::Motion Motion, model::Model Model, int PatternSize,

@@ -5,6 +5,7 @@
 #include <sophus/se3.hpp>
 
 #include "agent/agent.hpp"
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "energy/epipolar_geometry/epipolar_line.hpp"
 #include "energy/epipolar_geometry/epipolar_line_builder.hpp"
@@ -189,7 +190,7 @@ void depthEstimationTestBody(const size_t numberOfKeyframes) {
       }
 
       tracker::DepthEstimation::estimate<typename Motion::Product, features::PixelMap, Model, 1>(
-          target_grid, landmarks, gt_cam1_agent.inverse(), Eigen::Vector2<Precision>::Zero(),
+          target_grid, landmarks, gt_cam1_agent.inverse(), 1, Eigen::Vector2<Precision>::Zero(), 1,
           Eigen::Vector2<Precision>::Zero(), camera.calibration(), camera.pyramidOfMasks()[0], 9);
 
       updateLocalLandmarks(local_immature_landmarks, odometry_track.lastKeyframe().immatureLandmarks(sensor));

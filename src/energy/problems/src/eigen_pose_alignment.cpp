@@ -69,7 +69,8 @@ class PoseAlignerProblem {
 
     const auto &grid = *target_frame_.grids.at(sensor_id_);
 
-    Precision brightness_change_scale = std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
+    Precision brightness_change_scale = (target_frame_.exposure_time / reference_frame_.exposure_time) *
+                                        std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
     auto &active_landmarks = reference_frame_.active_landmarks.at(sensor_id_);
     for (size_t i = 0; i < active_landmarks.size(); ++i) {
       auto &landmark = active_landmarks[i];
@@ -132,7 +133,8 @@ class PoseAlignerProblem {
     const Eigen::Vector2<Precision> target_affine_brightness =
         target_frame_.affine_brightness0 + affine_brightness_eps_;
 
-    Precision brightness_change_scale = std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
+    Precision brightness_change_scale = (target_frame_.exposure_time / reference_frame_.exposure_time) *
+                                        std::exp(target_affine_brightness[0] - reference_affine_brightness[0]);
     const auto &landmarks = reference_frame_.active_landmarks.at(sensor_id_);
 
     auto logTransformer = t_t_r_.leftLogTransformer();

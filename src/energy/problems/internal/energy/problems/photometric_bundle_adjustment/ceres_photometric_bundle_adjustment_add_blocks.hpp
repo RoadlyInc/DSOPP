@@ -30,11 +30,12 @@ void addResidualBlock(ceres::Problem &problem,
       using CostFunctor =
           cost_functors::BundleAdjustmentPhotometricCostFunctor<Motion, Grid2D<C>, Model, PatternSize, C>;
       auto *cost_function = new ceres::AutoDiffCostFunction<CostFunctor, CostFunctor::residuals_num, Motion::DoF + 2,
-                                                            Motion::DoF + 2, 1, Model::DoF, Model::DoF>(new CostFunctor(
-          reference_frame.T_w_agent_linearization_point, target_frame.T_w_agent_linearization_point,
-          reference_frame.affine_brightness0, target_frame.affine_brightness0, *target_frame.grids.at(sensor_id),
-          landmark.reference_pattern, landmark.patch, target_frame.masks.at(sensor_id),
-          reference_frame.model.image_size(), target_frame.model.image_size()));
+                                                            Motion::DoF + 2, 1, Model::DoF, Model::DoF>(
+          new CostFunctor(reference_frame.T_w_agent_linearization_point, target_frame.T_w_agent_linearization_point,
+                          reference_frame.exposure_time, reference_frame.affine_brightness0, target_frame.exposure_time,
+                          target_frame.affine_brightness0, *target_frame.grids.at(sensor_id),
+                          landmark.reference_pattern, landmark.patch, target_frame.masks.at(sensor_id),
+                          reference_frame.model.image_size(), target_frame.model.image_size()));
       problem.AddResidualBlock(cost_function, loss_function, reference_frame.state_eps.data(),
                                target_frame.state_eps.data(), &landmark.idepth,
                                reference_frame.intrinsic_parameters.data(), target_frame.intrinsic_parameters.data());

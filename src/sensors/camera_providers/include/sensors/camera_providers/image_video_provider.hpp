@@ -9,6 +9,10 @@
 #include "sensors/camera_providers/camera_data_frame.hpp"
 #include "sensors/camera_providers/camera_provider.hpp"
 
+namespace dsopp::common::file_tools {
+struct CameraFrameTimes;
+}  // namespace dsopp::common::file_tools
+
 namespace dsopp::sensors::providers {
 
 /**
@@ -50,8 +54,8 @@ class ImageVideoProvider final : public CameraProvider {
  private:
   /** Video Capturer */
   cv::VideoCapture video_reader_;
-  /** container containing camera frames in frame_id order */
-  std::map<uint64_t, uint64_t> timestamps_;
+  /** container containing camera frames times in frame_id order */
+  std::map<uint64_t, dsopp::common::file_tools::CameraFrameTimes> times_;
   /** current frame index */
   size_t current_frame_id_;
   /** number of frames */

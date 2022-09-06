@@ -76,6 +76,7 @@ void compareOdometryTrack(track::OdometryTrack<Motion> &odometry_track,
     ASSERT_EQ(frame1->keyframeId(), frame2->keyframeId());
     ASSERT_TRUE(frame1->timestamp() == frame2->timestamp());
     ASSERT_TRUE((frame1->tWorldAgent() * frame2->tWorldAgent().inverse()).log().norm() < kEps);
+    ASSERT_TRUE(std::abs(frame1->exposureTime() - frame2->exposureTime()) < kEps);
     ASSERT_TRUE((frame1->affineBrightness() - frame2->affineBrightness()).norm() < kEps);
     const auto &attached_frames1 = frame1->attachedFrames();
     const auto &attached_frames2 = frame2->attachedFrames();
@@ -85,7 +86,8 @@ void compareOdometryTrack(track::OdometryTrack<Motion> &odometry_track,
       const auto &attached_frame2 = attached_frames2[attached_frame_iter];
       ASSERT_TRUE(attached_frame1->timestamp() == attached_frame2->timestamp());
       ASSERT_TRUE((attached_frame1->tWorldAgent() * attached_frame2->tWorldAgent().inverse()).log().norm() < kEps);
-      ASSERT_TRUE(attached_frame1->affineBrightness() == attached_frame2->affineBrightness());
+      ASSERT_TRUE(std::abs(attached_frame1->exposureTime() - attached_frame2->exposureTime()) < kEps);
+      ASSERT_TRUE((attached_frame1->affineBrightness() - attached_frame2->affineBrightness()).norm() < kEps);
     }
     const auto connections1 = odometry_track.connections().get(frame_iter);
     const auto connections2 = odometry_track_reloaded.connections().get(frame_iter);

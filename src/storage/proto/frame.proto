@@ -9,6 +9,7 @@ message LandmarksFrame {
 message TrackingFrame {
   uint64 timestamp = 1;
   repeated double t_keyframe_agent = 2;
+  double exposure_time = 5;
   repeated double affine_brightness = 3;
   map<uint32, bytes> image_buffer = 4;
 }
@@ -17,6 +18,7 @@ message Keyframe {
   uint32 keyframe_id = 8;
   uint64 timestamp = 2;
   repeated double t_world_agent = 3;
+  double exposure_time = 9;
   repeated double affine_brightness = 4;
   repeated LandmarksFrame landmarks = 5;
   repeated TrackingFrame tracking_frames = 6;

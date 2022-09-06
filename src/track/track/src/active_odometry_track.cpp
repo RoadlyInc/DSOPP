@@ -20,9 +20,10 @@ ActiveOdometryTrack<Motion>::ActiveOdometryTrack() = default;
 
 template <energy::motion::Motion Motion>
 void ActiveOdometryTrack<Motion>::pushFrame(size_t id, time timestamp, const Motion &t_world_agent,
+                                            const Precision exposure_time,
                                             const Eigen::Vector2<Precision> &affine_brightness) {
-  frames_.push_back(
-      std::make_unique<track::ActiveKeyframe<Motion>>(id, frames_.size(), timestamp, t_world_agent, affine_brightness));
+  frames_.push_back(std::make_unique<track::ActiveKeyframe<Motion>>(id, frames_.size(), timestamp, t_world_agent,
+                                                                    exposure_time, affine_brightness));
   active_frames_.emplace_back(frames_.back().get());
 }
 
@@ -197,14 +198,15 @@ std::unique_ptr<OdometryTrack<Motion>> ActiveOdometryTrack<Motion>::createTrack(
 
       keyframes[frame_i] =
           std::make_unique<Keyframe<Motion>>(frame->id(), frame->keyframeId(), frame->timestamp(), frame->tWorldAgent(),
-                                             frame->affineBrightness(), std::move(landmarks));
+                                             frame->exposureTime(), frame->affineBrightness(), std::move(landmarks));
       for (const auto &sensor : sensors) {
         keyframes[frame_i]->pushImage(sensor, frame->image(sensor));
       }
 
       for (const auto &attached_frame : frame->attachedFrames()) {
         keyframes[frame_i]->attachTrackingFrame(attached_frame->id(), attached_frame->timestamp(),
-                                                attached_frame->tKeyframeAgent(), attached_frame->affineBrightness());
+                                                attached_frame->tKeyframeAgent(), attached_frame->exposureTime(),
+                                                attached_frame->affineBrightness());
         for (const auto &sensor : sensors) {
           keyframes[frame_i]->lastAttachedFrame().pushImage(sensor, attached_frame->image(sensor));
         }

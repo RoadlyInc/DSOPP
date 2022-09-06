@@ -41,13 +41,17 @@ TEST(KeyframeTest, EncodeDecodeImage) {
   Motion tWorldAgent;
   size_t id = 0;
   time timestamp;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<Precision> dis(0, 1);
+  const Precision exposure_time = dis(gen);
   Eigen::Vector<Precision, 2> affine_brightness;
   affine_brightness.setRandom();
   typename Keyframe<Motion>::LandmarksFrame landmarks;
   cv::Mat image = testImage();
 
-  auto frame =
-      std::make_unique<Keyframe<Motion>>(id, id, timestamp, tWorldAgent, affine_brightness, std::move(landmarks));
+  auto frame = std::make_unique<Keyframe<Motion>>(id, id, timestamp, tWorldAgent, exposure_time, affine_brightness,
+                                                  std::move(landmarks));
   frame->pushImage(0, image);
   cv::Mat decoded_image = frame->image(0);
   EXPECT_TRUE(equalMatrices(image, decoded_image));
@@ -57,7 +61,7 @@ TEST(KeyframeTest, EncodeDecodeImage) {
   cv::Mat decoded_image_proto = frame_proto.image(0);
   EXPECT_TRUE(equalMatrices(image, decoded_image_proto));
 
-  frame->attachTrackingFrame(id, timestamp, tWorldAgent, affine_brightness);
+  frame->attachTrackingFrame(id, timestamp, tWorldAgent, exposure_time, affine_brightness);
   EXPECT_TRUE(frame->lastAttachedFrame().image(0).empty());
 
   frame->lastAttachedFrame().pushImage(0, image);

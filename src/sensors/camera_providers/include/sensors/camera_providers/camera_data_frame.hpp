@@ -23,9 +23,10 @@ class CameraDataFrame : public DataFrame {
    *
    * @param frame_id unique frame number
    * @param frame_data frame data loaded by data provider
+   * @param exposure_time exposure time
    * @param time time when sensor captured data
    */
-  CameraDataFrame(const int frame_id, cv::Mat &&frame_data, const time time);
+  CameraDataFrame(const int frame_id, cv::Mat &&frame_data, const Precision exposure_time, const time time);
   /**
    * method to get frame data.
    *
@@ -33,9 +34,18 @@ class CameraDataFrame : public DataFrame {
    */
   const cv::Mat &data() const;
 
+  /**
+   * method to get exposure time.
+   *
+   * @return exposure time.
+   */
+  Precision exposureTime() const;
+
  private:
   /** The main container which contains frame data. */
   cv::Mat frame_data_;
+  /** Exposure time. */
+  const Precision exposure_time_;
 };
 }  // namespace providers
 }  // namespace sensors

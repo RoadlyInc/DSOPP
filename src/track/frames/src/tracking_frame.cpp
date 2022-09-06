@@ -4,9 +4,9 @@ namespace dsopp {
 namespace track {
 template <energy::motion::Motion Motion>
 TrackingFrame<Motion>::TrackingFrame(size_t id, time timestamp, const Motion& t_world_keyframe,
-                                     const typename Motion::Product& t_keyframe_agent,
+                                     const typename Motion::Product& t_keyframe_agent, const Precision exposure_time,
                                      const Eigen::Vector<Precision, 2>& affine_brightness)
-    : Frame<Motion>(id, timestamp, t_world_keyframe * t_keyframe_agent, affine_brightness),
+    : Frame<Motion>(id, timestamp, t_world_keyframe * t_keyframe_agent, exposure_time, affine_brightness),
       tWorldKeyframe_(t_world_keyframe),
       tKeyframeAgent_(t_keyframe_agent) {}
 
@@ -19,6 +19,7 @@ proto::TrackingFrame TrackingFrame<Motion>::proto() const {
   for (int i = 0; i < Motion::Product::num_parameters; i++) {
     tracking_frame.add_t_keyframe_agent(parameters(i));
   }
+  tracking_frame.set_exposure_time(static_cast<double>(this->exposure_time_));
   for (int i = 0; i < this->affine_brightness_.size(); i++) {
     tracking_frame.add_affine_brightness(this->affine_brightness_[i]);
   }

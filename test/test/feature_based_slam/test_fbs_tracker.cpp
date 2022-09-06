@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <iomanip>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
 #include "energy/camera_model/pinhole/pinhole_camera.hpp"
 #include "energy/camera_model/pinhole/simple_radial.hpp"

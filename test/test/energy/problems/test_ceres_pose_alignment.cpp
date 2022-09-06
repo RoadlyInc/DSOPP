@@ -75,9 +75,10 @@ class testPoseAlignment : public ::testing::Test {
     if constexpr (C == 1) {
       solver.pushFrame(odometry_track.frames()[0]->timestamp(), odometry_track.frames()[0]->tWorldAgent(),
                        odometry_track.frames()[0]->pyramids(), {{data->sensor, data->camera->pyramidOfMasks()[0]}},
-                       sensor_depth_maps, Eigen::Vector2<Precision>::Zero(), 0, model, FrameParameterization::kFixed);
+                       sensor_depth_maps, 1, Eigen::Vector2<Precision>::Zero(), 0, model,
+                       FrameParameterization::kFixed);
       solver.pushFrame(odometry_track.frames()[1]->timestamp(), SE3(), odometry_track.frames()[1]->pyramids(),
-                       {{data->sensor, data->camera->pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0,
+                       {{data->sensor, data->camera->pyramidOfMasks()[0]}}, 1, Eigen::Vector2<Precision>::Zero(), 0,
                        model);
 
     } else {

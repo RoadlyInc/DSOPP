@@ -48,7 +48,7 @@ struct BenchmarkData {
       pyramid_of_masks->push_back(resized_mask.data());
     }
 
-    features = std::make_unique<CameraFeatures>(0, std::move(image), dsopp::time(), *pyramid_of_masks,
+    features = std::make_unique<CameraFeatures>(0, std::move(image), 1, dsopp::time(), *pyramid_of_masks,
                                                 tracking_feature_extractor, *pixel_data_frame_extractor, nullptr);
   }
 

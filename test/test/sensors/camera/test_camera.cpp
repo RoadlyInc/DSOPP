@@ -23,7 +23,7 @@ TEST(testCamera, oneCamera) {
   cv::Mat image(100, 100, CV_8UC3, cv::Scalar(255, 255, 255));
   image.at<cv::Vec3b>(50, 50) = cv::Vec3b(0, 0, 0);
   auto provider = std::make_unique<providers::MockCameraProvider>();
-  auto *data_frame = new providers::CameraDataFrame(0, std::move(image), time(std::chrono::milliseconds(0)));
+  auto *data_frame = new providers::CameraDataFrame(0, std::move(image), 1_p, time(std::chrono::milliseconds(0)));
   EXPECT_CALL(*provider, nextFrameProxy()).WillOnce(::testing::Return(data_frame));
   auto calib = calibration::CameraCalibration(Eigen::Vector2<Precision>::Zero(), Eigen::Vector4<Precision>::Zero(),
                                               energy::model::ModelType::kPinholeCamera);

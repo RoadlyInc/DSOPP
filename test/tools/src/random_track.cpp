@@ -103,7 +103,7 @@ std::unique_ptr<track::OdometryTrack<energy::motion::SE3<Precision>>> randomTrac
         frame_index, frame_index, t,
         Sophus::SE3<Precision>::exp(Sophus::SE3<Precision>::Tangent(static_cast<Precision>(offset), 0,
                                                                     -static_cast<Precision>(frame_index), 0, 0, 0)),
-        Eigen::Vector2<Precision>::Random(), std::move(landmarks));
+        random_distribution(generator), Eigen::Vector2<Precision>::Random(), std::move(landmarks));
     frames.push_back(std::move(frame));
   }
   auto connections = std::make_unique<track::ConnectionsContainer<SE3>>();

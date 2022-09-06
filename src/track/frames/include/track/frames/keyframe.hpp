@@ -29,10 +29,11 @@ class Keyframe : public Frame<Motion> {
    * @param keyframe_id id among other keyframes in the track
    * @param timestamp time of the capture
    * @param tWorldAgent pose of the agent
+   * @param exposure_time exposure time
    * @param affine_brightness affine brightness
    * @param landmarks landmarks attached to the frame
    */
-  Keyframe(size_t id, size_t keyframe_id, time timestamp, const Motion &tWorldAgent,
+  Keyframe(size_t id, size_t keyframe_id, time timestamp, const Motion &tWorldAgent, const Precision exposure_time,
            const Eigen::Vector<Precision, 2> &affine_brightness, LandmarksFrame &&landmarks);
   /**
    * creates frame from the protobuf container
@@ -57,10 +58,11 @@ class Keyframe : public Frame<Motion> {
    * @param id id of the frame
    * @param timestamp timestamp of the frame
    * @param tKeyframeAgent transformation from attached frame to keyframe
+   * @param exposure_time exposure time of attached frame
    * @param affine_brightness affine brightness of attached frame
    */
   void attachTrackingFrame(size_t id, time timestamp, const typename Motion::Product &tKeyframeAgent,
-                           const Eigen::Vector<Precision, 2> &affine_brightness);
+                           const Precision exposure_time, const Eigen::Vector<Precision, 2> &affine_brightness);
   /**
    * @return frames attached to this keyframe
    */

@@ -1,54 +1,52 @@
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <Eigen/Dense>
-#include <sophus/se3.hpp>
 
+#include "common/file_tools/camera_frame_times.hpp"
 #include "common/settings.hpp"
-#include "common/time/time.hpp"
-#include "energy/problems/photometric_bundle_adjustment/ceres_photometric_bundle_adjustment.hpp"
-#include "features/camera/camera_features.hpp"
-#include "features/camera/ceres_grid.hpp"
-#include "features/camera/frame_embedding_extractor.hpp"
-#include "features/camera/pattern_patch.hpp"
+#include "energy/camera_model/pinhole/pinhole_camera.hpp"
+#include "energy/motion/se3_motion.hpp"
+#include "energy/problems/photometric_bundle_adjustment/eigen_photometric_bundle_adjustment.hpp"
 #include "features/camera/pixel_data_frame.hpp"
 #include "features/camera/sobel_tracking_features_extractor.hpp"
 #include "features/camera/tracking_feature.hpp"
 #include "mock_camera_provider.hpp"
+#include "sensor/synchronized_frame.hpp"
 #include "sensors/camera/camera.hpp"
 #include "sensors/camera_calibration/fabric.hpp"
-
-#include "sensor/synchronized_frame.hpp"
-#include "sensors/camera_providers/image_folder_provider.hpp"
 #include "sensors/camera_providers/image_video_provider.hpp"
 #include "test/tools/depth_gt.hpp"
-#include "test/tools/solver_test_data.hpp"
 #include "track/active_odometry_track.hpp"
-#include "track/frames/active_keyframe.hpp"
+#include "track/active_track.hpp"
+#include "track/connections/connections_container.hpp"
+#include "track/connections/frame_connection.hpp"
 #include "track/landmarks/active_tracking_landmark.hpp"
+#include "track/landmarks/immature_tracking_landmark.hpp"
 #include "tracker/build_features.hpp"
-#include "tracker/depth_estimators/depth_estimation.hpp"
+#include "tracker/landmarks_activator/landmarks_activator.hpp"
 
-namespace dsopp {
-namespace energy {
-namespace problem {
-TEST(affine_brightness, affine_brightness) {
-  const Precision kGtA = 1;
-  const Precision kMaxAGt = 1e-8_p;
+namespace dsopp::energy::problem {
+void testAffineBrightness(bool regularize_affine_brightness, Precision exposure_time = 1) {
+  const Precision kGtA = 1.1_p;
+  const Precision kGtB = 10_p;
 
-  const Precision kGtB = 1e-4_p;
-  const Precision kMaxBGt = 1e-3_p;
+  const size_t kSensor = 0;
+  const size_t kStartFrame = 10;
+  const size_t kMaxPointsPerFrame = 800;
 
-  const size_t kFrameOffset = 1;
+  using Motion = energy::motion::SE3<Precision>;
   using Calibration = sensors::calibration::CameraCalibration;
   using Model = energy::model::PinholeCamera<Precision>;
-  static constexpr energy::model::ModelType ModelType = energy::model::ModelType::kPinholeCamera;
-  using SE3 = energy::motion::SE3<Precision>;
+  constexpr energy::model::ModelType ModelType = energy::model::ModelType::kPinholeCamera;
+
+  srand(0);
 
   auto calibration = Calibration(Eigen::Vector2<Precision>(1280, 720),
-                                 Eigen::Vector4<Precision>(448.15_p, 448.15_p, 640, 360), ModelType);
+                                 Eigen::Vector4<Precision>(448.155164329_p, 448.155164329_p, 640, 360), ModelType);
+  auto photometric_calibration =
+      sensors::calibration::photometric_calibration::create(TEST_DATA_DIR "track30seconds/pcalib.txt");
+  auto vignetting = sensors::calibration::vignetting::create(TEST_DATA_DIR "track30seconds/vignetting.png");
 
-  auto provider = std::make_unique<sensors::providers::ImageVideoProvider>(TEST_DATA_DIR "track30seconds/images.mkv",
-                                                                           TEST_DATA_DIR "track30seconds/times.csv");
+  auto provider = std::make_unique<sensors::providers::ImageVideoProvider>(
+      TEST_DATA_DIR "track30seconds/images.mkv", TEST_DATA_DIR "track30seconds/times.csv", kStartFrame);
 
   auto data_frame_1 = provider->nextFrame();
   auto data_frame_2 = provider->nextFrame();
@@ -60,10 +58,10 @@ TEST(affine_brightness, affine_brightness) {
   cv::Mat mock_image_2;
   image_1.convertTo(mock_image_2, CV_8UC1, kGtA, kGtB);
 
-  auto mock_data_frame_1 =
-      new sensors::providers::CameraDataFrame(data_frame_1->id(), std::move(mock_image_1), data_frame_1->timestamp());
-  auto mock_data_frame_2 =
-      new sensors::providers::CameraDataFrame(data_frame_2->id(), std::move(mock_image_2), data_frame_2->timestamp());
+  auto mock_data_frame_1 = new sensors::providers::CameraDataFrame(data_frame_1->id(), std::move(mock_image_1), 1,
+                                                                   data_frame_1->timestamp());
+  auto mock_data_frame_2 = new sensors::providers::CameraDataFrame(data_frame_2->id(), std::move(mock_image_2),
+                                                                   exposure_time, data_frame_2->timestamp());
 
   int counter = 0;
 
@@ -75,83 +73,119 @@ TEST(affine_brightness, affine_brightness) {
       return mock_data_frame_2;
   });
 
-  auto model = calibration.cameraModel<Model>();
-  size_t sensor = 0;
-  auto camera_mask = sensors::calibration::CameraMask(image_1.rows, image_1.cols);
-  sensors::calibration::CameraSettings::PhotometricCalibration photometric_calibration;
-  std::iota(photometric_calibration.begin(), photometric_calibration.end(), 0);
+  Eigen::Vector2<int> im_size = calibration.image_size().cast<int>();
+  auto camera_mask = sensors::calibration::CameraMask(im_size.y(), im_size.x());
+  auto model = calibration.cameraModel<energy::model::PinholeCamera<Precision>>();
   auto settings = std::make_unique<sensors::calibration::CameraSettings>(
-      std::move(calibration), std::move(photometric_calibration), cv::Mat(), std::move(camera_mask));
-  sensors::Camera camera("camera_1", 0, *settings, std::move(mock_provider),
-                         std::make_unique<dsopp::features::SobelTrackingFeaturesExtractor>());
-
-  std::vector<std::unique_ptr<sensors::SynchronizedFrame>> frames(kFrameOffset + 1);
-  for (size_t i = 0; i <= kFrameOffset; i++) {
-    frames[i] = std::make_unique<sensors::SynchronizedFrame>(camera.nextFrameId(), camera.nextFrameTime());
-    camera.processNextDataFrame(*frames[i]);
-  }
-  auto& frame1 = *frames[0]->cameraFeatures().at(sensor);
-  auto& frame2 = *frames[kFrameOffset]->cameraFeatures().at(sensor);
-  track::ActiveOdometryTrack<SE3> track;
+      std::move(calibration), std::move(photometric_calibration), std::move(vignetting), std::move(camera_mask));
+  auto camera =
+      std::make_unique<sensors::Camera>("camera_1", kSensor, *settings, std::move(mock_provider),
+                                        std::make_unique<dsopp::features::SobelTrackingFeaturesExtractor>(2000));
 
   auto gt_depth_data =
       test_tools::DepthGt(TEST_DATA_DIR "track30seconds/CameraDepth", TEST_DATA_DIR "track30seconds/times.csv");
-  auto gt_depth_frame = gt_depth_data.getFrame(frame1.timestamp());
-  track.pushFrame(frame1.id(), frame1.timestamp(), Sophus::SE3<Precision>());
-  {
-    auto pyramids = frame1.movePixelData();
-    track.lastKeyframe().pushPyramid(sensor, features::movePyramidAndDelete(pyramids));
-    track.lastKeyframe().pushPyramidOfMasks(sensor, frame1.movePyramidOfMasks());
-  }
-  track.lastKeyframe().pushImmatureLandmarks(sensor, tracker::buildFeatures(frame1.tracking(), *model));
 
-  const size_t landmarkSize = track.activeFrames().back()->immatureLandmarks(sensor).size();
-  for (size_t i = 0; i < landmarkSize; ++i) {
-    auto& landmark = track.activeFrames().back()->getImmatureLandmark(sensor, i);
-    const auto& coords = landmark.projection();
-    Precision idepth = 1._p / (*gt_depth_frame)[static_cast<size_t>(coords(0))][static_cast<size_t>(coords(1))];
-    landmark.setIdepthMin(idepth);
-    landmark.setIdepthMax(idepth);
+  std::vector<std::unique_ptr<sensors::SynchronizedFrame>> frames(2);
+  track::ActiveTrack<Motion> track;
+  auto& odometry_track = track.odometryTrack();
+  auto landmarks_activator =
+      std::make_unique<tracker::LandmarksActivator<Motion, Model, features::PixelMap, 1>>(camera->calibration());
+  for (size_t current_frame = 0; current_frame <= 1; ++current_frame) {
+    frames[current_frame] =
+        std::make_unique<sensors::SynchronizedFrame>(camera->nextFrameId(), camera->nextFrameTime());
+    camera->processNextDataFrame(*frames[current_frame]);
+
+    auto features = frames[current_frame]->cameraFeatures().at(kSensor).get();
+    auto gt_depth_frame = gt_depth_data.getFrame(features->timestamp());
+    odometry_track.pushFrame(features->id(), features->timestamp(), Motion(), features->exposureTime());
+    {
+      auto pixel_data_frame = features->movePixelData();
+      odometry_track.lastKeyframe().pushPyramid(kSensor, features::movePyramidAndDelete(pixel_data_frame));
+      odometry_track.lastKeyframe().pushPyramidOfMasks(kSensor, features->movePyramidOfMasks());
+    }
+    odometry_track.lastKeyframe().pushImmatureLandmarks(kSensor, tracker::buildFeatures(features->tracking(), *model));
+
+    const size_t landmarksSize = odometry_track.lastKeyframe().immatureLandmarks(kSensor).size();
+    Precision landmark_pick_probability =
+        static_cast<Precision>(kMaxPointsPerFrame) / static_cast<Precision>(landmarksSize);
+    for (size_t i = 0; i < landmarksSize; ++i) {
+      auto& landmark = odometry_track.lastKeyframe().getImmatureLandmark(kSensor, i);
+      const auto& coords = landmark.projection();
+      Precision idepth = 1._p / (*gt_depth_frame)[static_cast<size_t>(coords(0))][static_cast<size_t>(coords(1))];
+      landmark.setIdepthMin(idepth);
+      landmark.setIdepthMax(idepth);
+      if (rand() * 1.0 / RAND_MAX <= landmark_pick_probability) {
+        landmark.setStatus(track::landmarks::ImmatureStatus::kGood);
+      } else {
+        landmark.setStatus(track::landmarks::ImmatureStatus::kDelete);
+      }
+      landmark.setSearchPixelInterval(0);
+    }
+
+    landmarks_activator->activate(odometry_track);
   }
+  for (size_t k = 0; k < odometry_track.activeFrames().size(); k++) {
+    auto& keyframe = odometry_track.getActiveKeyframe(k);
+    for (size_t idx = 0; idx < keyframe.activeLandmarks(kSensor).size(); idx++) {
+      keyframe.getActiveLandmark(kSensor, idx).setIdepthVariance(2);
+      keyframe.getActiveLandmark(kSensor, idx).setRelativeBaseline(1);
+    }
+  }
+  for (auto& reference_frame : odometry_track.activeFrames()) {
+    for (auto& target_frame : odometry_track.activeFrames()) {
+      if (reference_frame->keyframeId() >= target_frame->keyframeId()) continue;
+      auto connection = std::make_unique<track::FrameConnection<typename Motion::Product>>(
+          reference_frame->keyframeId(), target_frame->keyframeId());
+      connection->addSensorConnection(kSensor, kSensor, reference_frame->activeLandmarks(kSensor).size(),
+                                      target_frame->activeLandmarks(kSensor).size());
+      reference_frame->addConnection(target_frame->keyframeId(), connection.get());
+      target_frame->addConnection(reference_frame->keyframeId(), connection.get());
+      odometry_track.connections().add(std::move(connection));
+    }
+  }
+
   const size_t kMaxIteration = 50;
   const Precision kInitialTrustRegionRadius = 1e5;
   const Precision kFunctionTolerance = 1e-8_p;
   const Precision kParameterTolerance = 1e-8_p;
-  auto dsopp_solver = CeresPhotometricBundleAdjustment<SE3, Model, Pattern::kSize, features::PixelMap, true, false>(
-      energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<double>(
-          kMaxIteration, kInitialTrustRegionRadius, kFunctionTolerance, kParameterTolerance,
-          Eigen::Vector2<double>::Constant(1e12), 1e16, 5));
-  dsopp_solver.pushFrame(*track.activeFrames().back(), 0, *model);
-  track::ActiveKeyframe<SE3>::Pyramids nonkeyframe_pyramids;
-  {
-    auto pyramids = frame2.movePixelData();
-    nonkeyframe_pyramids[sensor] = features::movePyramidAndDelete(pyramids);
-  }
-  dsopp_solver.pushFrame(frame2.timestamp(), Sophus::SE3<Precision>(), nonkeyframe_pyramids,
-                         {{sensor, camera.pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0, *model);
-  dsopp_solver.solve(4);
-  auto reference_affine_brightness_dsopp = dsopp_solver.getAffineBrightness(frame1.timestamp());
-  auto target_affine_brightness_dsopp = dsopp_solver.getAffineBrightness(frame2.timestamp());
-  Precision a_dsopp = std::exp(target_affine_brightness_dsopp[0] - reference_affine_brightness_dsopp[0]);
-  Precision b_dsopp = target_affine_brightness_dsopp[1] - a_dsopp * reference_affine_brightness_dsopp[1];
-  EXPECT_LE(std::abs(a_dsopp - kGtA), kMaxAGt);
-  EXPECT_LE(std::abs(b_dsopp - kGtB), kMaxBGt);
+  const auto kAffineBrightnessRegularizer = regularize_affine_brightness ? Eigen::Vector2<Precision>::Constant(1e12_p)
+                                                                         : Eigen::Vector2<Precision>::Constant(0_p);
+  const Precision kFixedStateRegularizer = 1e16_p;
+  const auto options = TrustRegionPhotometricBundleAdjustmentOptions<Precision>(
+      kMaxIteration, kInitialTrustRegionRadius, kFunctionTolerance, kParameterTolerance, kAffineBrightnessRegularizer,
+      kFixedStateRegularizer);
 
-  auto ceres_solver = CeresPhotometricBundleAdjustment<SE3, Model, Pattern::kSize, features::CeresGrid, true, false>(
-      energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<double>(
-          kMaxIteration, kInitialTrustRegionRadius, kFunctionTolerance, kParameterTolerance,
-          Eigen::Vector2<double>::Constant(1e12), 1e16, 5));
-  ceres_solver.pushFrame(*track.activeFrames().back(), 0, *model);
-  ceres_solver.pushFrame(frame2.timestamp(), Sophus::SE3<Precision>(), nonkeyframe_pyramids,
-                         {{sensor, camera.pyramidOfMasks()[0]}}, Eigen::Vector2<Precision>::Zero(), 0, *model);
-  ceres_solver.solve(4);
-  auto reference_affine_brightness_ceres = ceres_solver.getAffineBrightness(frame1.timestamp());
-  auto target_affine_brightness_ceres = ceres_solver.getAffineBrightness(frame2.timestamp());
-  Precision a_ceres = std::exp(target_affine_brightness_ceres[0] - reference_affine_brightness_ceres[0]);
-  Precision b_ceres = target_affine_brightness_ceres[1] - a_ceres * reference_affine_brightness_ceres[1];
-  EXPECT_LE(std::abs(a_ceres - kGtA), kMaxAGt);
-  EXPECT_LE(std::abs(b_ceres - kGtB), kMaxBGt);
+  auto solver = energy::problem::EigenPhotometricBundleAdjustment<Motion, Model>(options);
+
+  const auto& frame1 = *odometry_track.keyframes().front();
+  const auto& frame2 = *odometry_track.keyframes().back();
+  solver.pushFrame(frame1, 0, *model, FrameParameterization::kFixed);
+  solver.pushFrame(frame2, 0, *model, FrameParameterization::kFree);
+
+  solver.solve(1);
+
+  auto target_affine_brightness_dsopp = solver.getAffineBrightness(frame2.timestamp());
+  auto a = std::exp(target_affine_brightness_dsopp[0]);
+  auto b = target_affine_brightness_dsopp[1];
+  if (regularize_affine_brightness) {
+    EXPECT_LT(std::abs(a - 1), 1e-3);
+    EXPECT_LT(std::abs(b), 1e-3);
+  } else {
+    EXPECT_GT(exposure_time * a, kGtA + (kGtA - 1) / 2);
+    EXPECT_GT(b, kGtB / 3);
+    if (exposure_time > 1) {
+      EXPECT_LT(a, kGtA + (kGtA - 1) / 2);
+    }
+  }
 }
-}  // namespace problem
-}  // namespace energy
-}  // namespace dsopp
+
+TEST(affine_brightness, affine_brightness_without_regularization_without_exposure_time) { testAffineBrightness(false); }
+
+TEST(affine_brightness, affine_brightness_with_regularization_without_exposure_time) { testAffineBrightness(true); }
+
+TEST(affine_brightness, affine_brightness_without_regularization_with_exposure_time) {
+  testAffineBrightness(false, 10);
+}
+
+TEST(affine_brightness, affine_brightness_with_regularization_with_exposure_time) { testAffineBrightness(true, 10); }
+}  // namespace dsopp::energy::problem

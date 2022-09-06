@@ -5,11 +5,12 @@ namespace track {
 template <energy::motion::Motion Motion>
 SLAMInternalTrackingFrame<Motion>::SLAMInternalTrackingFrame(size_t id, time timestamp, const Motion& t_world_keyframe,
                                                              const typename Motion::Product& t_keyframe_agent,
+                                                             const Precision exposure_time,
                                                              const Eigen::Vector<Precision, 2>& affine_brightness,
                                                              Precision mean_square_optical_flow,
                                                              Precision mean_square_optical_flow_without_rotation,
                                                              Precision pose_rmse, bool reliable)
-    : TrackingFrame<Motion>(id, timestamp, t_world_keyframe, t_keyframe_agent, affine_brightness),
+    : TrackingFrame<Motion>(id, timestamp, t_world_keyframe, t_keyframe_agent, exposure_time, affine_brightness),
       mean_square_optical_flow_(mean_square_optical_flow),
       mean_square_optical_flow_without_rotation_(mean_square_optical_flow_without_rotation),
       pose_rmse_(pose_rmse),
