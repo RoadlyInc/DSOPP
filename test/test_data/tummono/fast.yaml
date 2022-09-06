@@ -44,10 +44,12 @@ tracker:
   photometric_bundle_adjustment:
     solver: eigen
     max_iterations: 7
+    affine_brightness_regularizers: 1e12 1e8
   pose_alignment:
     solver: eigen
     #poses_file: "./gt.tum"
     max_iterations: 50
+    affine_brightness_regularizers: 1e12 1e8
 
 initializer:
   type: monocular
