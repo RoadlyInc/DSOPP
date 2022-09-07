@@ -7,6 +7,7 @@
 #include <glog/logging.h>
 
 #include "common/fabric_tools/parameters.hpp"
+#include "common/file_tools/parsing.hpp"
 #include "common/file_tools/read_tum_poses.hpp"
 #include "common/settings.hpp"
 #include "energy/camera_model/pinhole/pinhole_camera.hpp"
@@ -35,6 +36,25 @@
 namespace dsopp {
 namespace tracker {
 namespace {
+template <int C>
+void readAffineBrightnessRegularizers(Eigen::Vector2<Precision> &affine_brightness_regularizer,
+                                      const std::map<std::string, std::any> &parameters) {
+  if (parameters.count("affine_brightness_regularizers") == 0) {
+    LOG(WARNING) << "Missing \"affine_brightness_regularizers\" value. Setting to "
+                 << affine_brightness_regularizer.transpose();
+    return;
+  }
+
+  const auto string_affine_brightness_regularizer =
+      std::any_cast<std::string>(parameters.at("affine_brightness_regularizers"));
+  const auto string_affine_brightness_regularizer_values =
+      common::file_tools::splitLine(string_affine_brightness_regularizer, ' ');
+  affine_brightness_regularizer =
+      C *
+      Eigen::Vector2<Precision>(common::file_tools::stringToPrecision(string_affine_brightness_regularizer_values[0]),
+                                common::file_tools::stringToPrecision(string_affine_brightness_regularizer_values[1]));
+}
+
 template <energy::motion::Motion Motion, energy::model::Model Model, int PatternSize, template <int> typename Grid2D,
           int C>
 std::unique_ptr<
@@ -45,7 +65,7 @@ createPhotometricBundleAdjustment(const std::map<std::string, std::any> &paramet
   const Precision kParameterTolerance = 1e-8_p;
 
   size_t max_iterations = 7;
-  const Eigen::Vector2<Precision> kAffineBrightnessRegularizer = Eigen::Vector2<Precision>(0 * C, 0 * C);
+  Eigen::Vector2<Precision> affine_brightness_regularizer = Eigen::Vector2<Precision>(1e12_p * C, 1e8_p * C);
   const Precision kFixedStateRegularizer = static_cast<Precision>(1e16 * C);
   const Precision huber_loss = static_cast<Precision>(huber_loss_sigma * std::sqrt(C));
   if (parameters.count("photometric_bundle_adjustment") == 0) {
@@ -54,7 +74,7 @@ createPhotometricBundleAdjustment(const std::map<std::string, std::any> &paramet
     return std::make_unique<
         energy::problem::EigenPhotometricBundleAdjustment<Motion, Model, PatternSize, Grid2D, true, true, true, C>>(
         energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<Precision>(
-            max_iterations, kTrustRegionRadius, kFunctionTolerance, kParameterTolerance, kAffineBrightnessRegularizer,
+            max_iterations, kTrustRegionRadius, kFunctionTolerance, kParameterTolerance, affine_brightness_regularizer,
             kFixedStateRegularizer, huber_loss),
         true, true);
   }
@@ -65,26 +85,28 @@ createPhotometricBundleAdjustment(const std::map<std::string, std::any> &paramet
   std::string solver_type;
   if (!common::fabric_tools::readParameter(solver_type, pba_parameters, "solver", false)) {
     LOG(ERROR) << "Missing field \"solver\". Photometric bundle adjustment was not created";
-    return 0;
+    return nullptr;
   }
 
   if (solver_type == "eigen") {
     common::fabric_tools::readParameter(max_iterations, pba_parameters, "max_iterations");
+    readAffineBrightnessRegularizers<C>(affine_brightness_regularizer, pba_parameters);
     return std::make_unique<
         energy::problem::EigenPhotometricBundleAdjustment<Motion, Model, PatternSize, Grid2D, true, true, true, C>>(
         energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<Precision>(
-            max_iterations, kTrustRegionRadius, kFunctionTolerance, kParameterTolerance, kAffineBrightnessRegularizer,
+            max_iterations, kTrustRegionRadius, kFunctionTolerance, kParameterTolerance, affine_brightness_regularizer,
             kFixedStateRegularizer, huber_loss),
         true, true);
 
   } else if (solver_type == "ceres") {
     if constexpr (std::is_same_v<Precision, double>) {
       common::fabric_tools::readParameter(max_iterations, pba_parameters, "max_iterations");
+      readAffineBrightnessRegularizers<C>(affine_brightness_regularizer, pba_parameters);
       return std::make_unique<energy::problem::CeresPhotometricBundleAdjustment<Motion, Model, PatternSize, Grid2D,
                                                                                 true, true, true, false, C>>(
           energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<double>(
-              max_iterations, kTrustRegionRadius, kFunctionTolerance, kParameterTolerance, kAffineBrightnessRegularizer,
-              kFixedStateRegularizer, huber_loss_sigma * std::sqrt(C)),
+              max_iterations, kTrustRegionRadius, kFunctionTolerance, kParameterTolerance,
+              affine_brightness_regularizer, kFixedStateRegularizer, huber_loss_sigma * std::sqrt(C)),
           true, true, 0);
     } else {
       LOG(ERROR) << "Double as dsopp::Precision is only supported to create Ceres photometric bundle adjustment solver";
@@ -107,7 +129,7 @@ std::unique_ptr<energy::problem::PoseAlignment<Motion, Model, PatternSize, Grid2
   const Precision kParameterTolerance = 1e-5_p;
 
   size_t max_iterations = 50;
-  const Eigen::Vector2<Precision> kAffineBrightnessRegularizer = Eigen::Vector2<Precision>(0 * C, 0 * C);
+  Eigen::Vector2<Precision> affine_brightness_regularizer = Eigen::Vector2<Precision>(1e12_p * C, 1e8_p * C);
   const Precision kFixedStateRegularizer = static_cast<Precision>(1e16 * C);
   const Precision huber_loss = static_cast<Precision>(huber_loss_sigma * std::sqrt(C));
 
@@ -117,7 +139,7 @@ std::unique_ptr<energy::problem::PoseAlignment<Motion, Model, PatternSize, Grid2
     return std::make_unique<energy::problem::EigenPoseAlignment<Motion, Model, PatternSize, Grid2D, C>>(
         energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<Precision>(
             max_iterations, kInitialTrustRegionRadius, kFunctionTolerance, kParameterTolerance,
-            kAffineBrightnessRegularizer, kFixedStateRegularizer, huber_loss));
+            affine_brightness_regularizer, kFixedStateRegularizer, huber_loss));
   }
 
   const auto &pose_alignment_parameters =
@@ -126,15 +148,16 @@ std::unique_ptr<energy::problem::PoseAlignment<Motion, Model, PatternSize, Grid2
   std::string solver_type;
   if (!common::fabric_tools::readParameter(solver_type, pose_alignment_parameters, "solver", false)) {
     LOG(ERROR) << "Missing field \"solver\". Pose alignment was not created";
-    return 0;
+    return nullptr;
   }
 
   if (solver_type == "eigen") {
     common::fabric_tools::readParameter(max_iterations, pose_alignment_parameters, "max_iterations");
+    readAffineBrightnessRegularizers<C>(affine_brightness_regularizer, pose_alignment_parameters);
     return std::make_unique<energy::problem::EigenPoseAlignment<Motion, Model, PatternSize, Grid2D, C>>(
         energy::problem::TrustRegionPhotometricBundleAdjustmentOptions<Precision>(
             max_iterations, kInitialTrustRegionRadius, kFunctionTolerance, kParameterTolerance,
-            kAffineBrightnessRegularizer, kFixedStateRegularizer, huber_loss));
+            affine_brightness_regularizer, kFixedStateRegularizer, huber_loss));
 
   } else if (solver_type == "precalculated") {
     std::string poses_file_path;
