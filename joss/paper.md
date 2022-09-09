@@ -19,8 +19,6 @@ authors:
   - name: Oleg Chemokos 
     affiliation: 1
     orcid: 0000-0003-2830-4340
-  - name: Eugene Nikolsky
-    affiliation: 1
 affiliations:
  - name: Roadly Inc, USA
    index: 1
