@@ -84,16 +84,19 @@ if __name__ == "__main__":
         "w": calib.image_size[0],
         "h": calib.image_size[1],
         "aabb_scale": 16,
-        #"scale": 0.5,
-        #"offset": [0.5, 0.5, 0.5],
+        "scale": 1,
+        "offset": [0, 0, 0],
     }
 
     frames_json = []
 
     odometry_poses = [frame.odometry_t_world_frame for frame in track.frames]
-    distance, mean = translation_affine_transform(odometry_poses)
-
-    for frame_id, frame in tqdm(enumerate(track.frames),
+    distance, mean = translation_affine_transform(odometry_poses[:20])
+    
+    point_file = args.output + "/points3D.txt"
+    point_file = open(point_file, 'w') 
+    point_id = 1
+    for frame_id, frame in tqdm(enumerate(track.frames[:20]),
                                 'Processing frames',
                                 total=len(track.track.frames)):
         image = frame.image()
@@ -106,13 +109,24 @@ if __name__ == "__main__":
         motion = np.eye(4)
         motion[:3, :3] = GLOBAL_R
         pose = motion @ pose
+        
+        scaler =  1.0 / sqrt(2 * distance)
 
-        pose[:3, 3] = (pose[:3, 3] - mean) / sqrt(2 * distance)
-
+        pose[:3, 3] = (pose[:3, 3] - mean) * scaler
+       
         pose[0:3, 2] *= -1
         pose[0:3, 1] *= -1
         pose = pose[[1, 0, 2, 3], :]
         pose[2, :] *= -1
+
+        for landmark in frame.landmarks:
+           #if not landmark.confident(0.15, 5e-8): continue
+           direction = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]]) @  landmark.direction
+           point = pose[:3, :3] @ (direction * scaler / landmark.idepth)
+           point += pose[:3, 3]
+           point_file.write(f'{point_id} {point[0]} {point[1]} {point[2]}\n')
+           point_id += 1
+
 
         frame_json = {
             "file_path": file_path,
