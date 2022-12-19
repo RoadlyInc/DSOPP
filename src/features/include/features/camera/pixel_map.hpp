@@ -1,6 +1,7 @@
 #ifndef DSOPP_PIXELMAP_H
 #define DSOPP_PIXELMAP_H
 
+#include <memory>
 #include <vector>
 
 #include <ceres/jet.h>
@@ -81,6 +82,8 @@ struct PixelInfo {
   using PixelReturnType = typename internal::traits<PixelInfo<C>>::PixelReturnType;
   /** Return const type of information for all channels*/
   using PixelReturnTypeConst = typename internal::traits<PixelInfo<C>>::PixelReturnTypeConst;
+  /** Aligned allocator for PixelInfo */
+  using PixelInfoAllocator = Eigen::aligned_allocator<PixelInfo<C>>;
 
   /**
    * struct constructor by default
@@ -139,7 +142,7 @@ template <int C>
 class PixelMap {
  public:
   /** Alias for storage type for Pixel Info */
-  using PixelInfoStorage = Eigen::Array<PixelInfo<C>, -1, -1, Eigen::RowMajor>;
+  using PixelInfoStorage = Eigen::Map<Eigen::Array<PixelInfo<C>, -1, -1, Eigen::RowMajor>>;
 
   /**
    * creates PixelMap from plain data and size of map
@@ -321,8 +324,11 @@ class PixelMap {
   /** Container with all image pixels [channel][height][width]  */
   std::vector<Precision> plain_data_;
 
-  /** Container with channel info for all pixels  */
-  PixelInfoStorage map_;
+  /** Container with channel info for all pixels [height][width][PixelInfo<C>]  */
+  std::shared_ptr<std::vector<PixelInfo<C>, typename PixelInfo<C>::PixelInfoAllocator>> pixelinfo_data_;
+
+  /** Eigen::Array view into the container with channel info for all pixels  */
+  PixelInfoStorage map_ = PixelInfoStorage(nullptr, 0, 0);
 };
 
 /** Aliases for one channel Image */

@@ -11,6 +11,7 @@ class Pinhole:
     """
     Pinhole camera model
     """
+
     def __init__(self, focal_x, focal_y, center_x, center_y):
         """
         Intialize Pinhole camera via 3x3 calibration matrix
@@ -61,6 +62,7 @@ class CameraCalibration:
     """
     Camera calibration
     """
+
     def __init__(self, intrinsics, image_size, model_type):
         if model_type.name == 'pinhole':
             self.model = Pinhole(*intrinsics[:4])
