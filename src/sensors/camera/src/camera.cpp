@@ -5,6 +5,7 @@
 #include <glog/logging.h>
 #include "features/camera/camera_features.hpp"
 #include "features/camera/frame_embedding_extractor.hpp"
+#include "features/camera/photometrically_corrected_image.hpp"
 #include "features/camera/pixel_data_frame.hpp"
 #include "features/camera/pixel_data_frame_extractor.hpp"
 #include "features/camera/pixel_map.hpp"

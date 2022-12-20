@@ -6,6 +6,7 @@ add_library(
   src/pixel_data_frame.cpp
   src/pixel_data_frame_extractor.cpp
   src/pixel_map.cpp
+  src/calculate_pixelinfo.cpp
   src/tracking_feature.cpp
   src/eigen_tracking_features_extractor.cpp
   src/sobel_tracking_features_extractor.cpp
