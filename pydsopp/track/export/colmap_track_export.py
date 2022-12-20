@@ -12,7 +12,6 @@ class Point3D:
     """
     Internal class for building colmap data, representation of 3D point with index and 2D projection indices
     """
-
     @dataclass
     class Projection:
         frame_index: int
@@ -32,7 +31,6 @@ class Frame:
     """
     Internal class for building colmap data
     """
-
     @dataclass
     class Point2D:
         pixel: np.ndarray
