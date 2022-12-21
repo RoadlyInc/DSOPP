@@ -1,6 +1,7 @@
 #ifndef DSOPP_PIXELMAP_H
 #define DSOPP_PIXELMAP_H
 
+#include <memory>
 #include <vector>
 
 #include <ceres/jet.h>
@@ -81,6 +82,8 @@ struct PixelInfo {
   using PixelReturnType = typename internal::traits<PixelInfo<C>>::PixelReturnType;
   /** Return const type of information for all channels*/
   using PixelReturnTypeConst = typename internal::traits<PixelInfo<C>>::PixelReturnTypeConst;
+  /** Aligned allocator for PixelInfo */
+  using PixelInfoAllocator = Eigen::aligned_allocator<PixelInfo<C>>;
 
   /**
    * struct constructor by default
@@ -139,7 +142,7 @@ template <int C>
 class PixelMap {
  public:
   /** Alias for storage type for Pixel Info */
-  using PixelInfoStorage = Eigen::Array<PixelInfo<C>, -1, -1, Eigen::RowMajor>;
+  using PixelInfoStorage = Eigen::Map<Eigen::Array<PixelInfo<C>, -1, -1, Eigen::RowMajor>>;
 
   /**
    * creates PixelMap from plain data and size of map
@@ -149,7 +152,7 @@ class PixelMap {
    * @param width width of the map
    * @param height height of the map
    */
-  PixelMap(std::vector<Precision> &&data, long width, long height);
+  PixelMap(std::vector<Precision, PrecisionAllocator> &&data, long width, long height);
   /** default constructor */
   PixelMap();
   /** default move constructor */
@@ -187,7 +190,7 @@ class PixelMap {
    *
    * @return full data from the map
    * */
-  const std::vector<Precision> &data() const;
+  const std::vector<Precision, PrecisionAllocator> &data() const;
 
   /**
    * method to get PixelInfo for individual pixel
@@ -319,10 +322,13 @@ class PixelMap {
 
  private:
   /** Container with all image pixels [channel][height][width]  */
-  std::vector<Precision> plain_data_;
+  std::vector<Precision, PrecisionAllocator> plain_data_;
 
-  /** Container with channel info for all pixels  */
-  PixelInfoStorage map_;
+  /** Container with channel info for all pixels [height][width][PixelInfo<C>]  */
+  std::shared_ptr<std::vector<PixelInfo<C>, typename PixelInfo<C>::PixelInfoAllocator>> pixelinfo_data_;
+
+  /** Eigen::Array view into the container with channel info for all pixels  */
+  PixelInfoStorage map_ = PixelInfoStorage(nullptr, 0, 0);
 };
 
 /** Aliases for one channel Image */

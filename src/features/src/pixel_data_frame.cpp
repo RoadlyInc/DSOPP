@@ -14,14 +14,16 @@ PixelDataFrame::PixelDataFrame(const cv::Mat &image, const PhotometricCalibratio
   levels = std::min(levels, kMaxPyramidDepth);
 
   // TODO Do vignetting before undistorting to avoid division by zero
-  std::vector<Precision> zero_level = photometricallyCorrectedImage(image, photometric_calibration, vignetting);
+  std::vector<Precision, PrecisionAllocator> zero_level =
+      photometricallyCorrectedImage(image, photometric_calibration, vignetting);
+  // std::vector<Precision, PrecisionAllocator> zero_level(image.begin<Precision>(), image.end<Precision>());
 
   auto width = static_cast<int>(image.cols);
   auto height = static_cast<int>(image.rows);
 
   pyramid_.emplace_back(std::move(zero_level), width, height);
   for (size_t level = 1; level < levels; ++level) {
-    std::vector<Precision> level_image = downscaleImage(pyramid_.back().data(), height, width);
+    std::vector<Precision, PrecisionAllocator> level_image = downscaleImage(pyramid_.back().data(), height, width);
     width /= 2;
     height /= 2;
     pyramid_.emplace_back(std::move(level_image), width, height);

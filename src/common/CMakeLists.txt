@@ -13,3 +13,4 @@ add_library(settings INTERFACE)
 target_include_directories(
   settings INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                      $<INSTALL_INTERFACE:include/dsopp>)
+target_link_libraries(settings INTERFACE eigen)

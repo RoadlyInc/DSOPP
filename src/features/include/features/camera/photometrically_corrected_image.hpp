@@ -6,6 +6,7 @@
 #include "opencv2/core.hpp"
 
 #include "common/settings.hpp"
+#include "features/camera/pixel_map.hpp"
 
 namespace dsopp::features {
 /**
@@ -16,9 +17,8 @@ namespace dsopp::features {
  * @param vignetting vignetting
  * @return photometrically corrected grayscale Precision image
  */
-std::vector<Precision> photometricallyCorrectedImage(const cv::Mat &image,
-                                                     const std::array<Precision, 256> &photometric_calibration,
-                                                     const cv::Mat &vignetting);
+std::vector<Precision, PrecisionAllocator> photometricallyCorrectedImage(
+    const cv::Mat &image, const std::array<Precision, 256> &photometric_calibration, const cv::Mat &vignetting);
 }  // namespace dsopp::features
 
 #endif  // DSOPP_PHOTOMETRICALLY_CORRECTED_IMAGE_HPP

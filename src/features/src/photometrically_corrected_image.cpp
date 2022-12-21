@@ -6,16 +6,15 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 namespace dsopp::features {
-std::vector<Precision> photometricallyCorrectedImage(const cv::Mat &image,
-                                                     const std::array<Precision, 256> &photometric_calibration,
-                                                     const cv::Mat &vignetting) {
+std::vector<Precision, PrecisionAllocator> photometricallyCorrectedImage(
+    const cv::Mat &image, const std::array<Precision, 256> &photometric_calibration, const cv::Mat &vignetting) {
   double max_value_vignetting;
   if (!vignetting.empty()) {
     cv::minMaxLoc(vignetting, nullptr, &max_value_vignetting);
   }
   CHECK(vignetting.empty() || image.size() == vignetting.size());
 
-  std::vector<Precision> result(static_cast<size_t>(image.rows * image.cols));
+  std::vector<Precision, PrecisionAllocator> result(static_cast<size_t>(image.rows * image.cols));
   auto width = static_cast<long>(image.cols);
   auto height = static_cast<long>(image.rows);
   Eigen::Map<Eigen::Array<Precision, -1, -1, Eigen::RowMajor>> result_map(result.data(), height, width);

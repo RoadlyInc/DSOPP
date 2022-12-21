@@ -4,16 +4,20 @@
 #include <Eigen/Dense>
 #include <array>
 
+#include "common/settings.hpp"
+#include "features/camera/pixel_map.hpp"
+
 namespace dsopp::features {
 /**
  * fast resize image 2 times
  * @param image grayscale uchar image stored as row major
  * @param height, width size of the image
  */
-static std::vector<Precision> downscaleImage(const std::vector<Precision> &image, int height, int width) {
+static std::vector<Precision, PrecisionAllocator> downscaleImage(
+    const std::vector<Precision, PrecisionAllocator> &image, int height, int width) {
   Eigen::Map<const Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> image_map(image.data(),
                                                                                                         height, width);
-  std::vector<Precision> resized_image(image.size() / 4);
+  std::vector<Precision, PrecisionAllocator> resized_image(image.size() / 4);
   Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> resized_image_map(
       resized_image.data(), height / 2, width / 2);
 

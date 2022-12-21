@@ -22,7 +22,7 @@ using namespace dsopp;
 using namespace dsopp::features;
 using namespace dsopp::sensors::calibration;
 
-template <int width = 1280, int height = 720>
+template <int width = 1280, int height = 720, int channels = 1>
 struct BenchmarkData {
   BenchmarkData() {
     const size_t kNumberOfPyramidLevels = 4;
@@ -30,8 +30,10 @@ struct BenchmarkData {
     image = cv::imread(image_name);
     cv::resize(image, image, cv::Size(width, height));
 
-    image_data.resize(width * height);
-    for (int i = 0; i < width * height; ++i) image_data[static_cast<size_t>(i)] = image.at<uint8_t>(i);
+    image_data.resize(width * height * channels);
+    for (int c = 0; c < channels; c++)
+      for (int i = 0; i < width * height; ++i)
+        image_data[static_cast<size_t>(width * height * c + i)] = image.at<uint8_t>(i);
 
     vignetting = cv::Mat(image.rows, image.cols, CV_8UC1, 255);
 
@@ -54,7 +56,7 @@ struct BenchmarkData {
 
   std::unique_ptr<CameraFeatures> features;
 
-  std::vector<Precision> image_data;
+  std::vector<Precision, PrecisionAllocator> image_data;
 
  private:
   std::unique_ptr<std::vector<CameraMask>> pyramid_of_masks;
@@ -86,20 +88,22 @@ BENCHMARK_TEMPLATE(PixelDataFrameBenchmark, 1280, 720)->Unit(benchmark::kMillise
 BENCHMARK_TEMPLATE(PixelDataFrameBenchmark, 1920, 1080)->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(PixelDataFrameBenchmark, 3840, 2160)->Unit(benchmark::kMillisecond);
 
-template <int width, int height>
+template <int width, int height, int channels>
 static void PixelMapBenchmark(benchmark::State& state) {
-  BenchmarkData<width, height> data;
+  BenchmarkData<width, height, channels> data;
   for (auto _ : state) {
     state.PauseTiming();
-    std::vector<Precision> image = data.image_data;
+    std::vector<Precision, PrecisionAllocator> image = data.image_data;
     state.ResumeTiming();
 
-    PixelMap<1> pixel_map(std::move(image), width, height);
+    PixelMap<channels> pixel_map(std::move(image), width, height);
   }
 }
-BENCHMARK_TEMPLATE(PixelMapBenchmark, 1280, 720)->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(PixelMapBenchmark, 1920, 1080)->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(PixelMapBenchmark, 3840, 2160)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(PixelMapBenchmark, 1280, 720, 1)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(PixelMapBenchmark, 1920, 1080, 1)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(PixelMapBenchmark, 3840, 2160, 1)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(PixelMapBenchmark, 960, 540, 8)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(PixelMapBenchmark, 1920, 1080, 8)->Unit(benchmark::kMillisecond);
 
 static void PixelDataFrameEvaluateBenchmark(benchmark::State& state) {
   BenchmarkData data;
