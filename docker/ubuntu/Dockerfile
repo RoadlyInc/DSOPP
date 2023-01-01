@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install build-essential software-properties-common
     cmake \
     libboost-all-dev \
     graphviz \
-    doxygen \
     libgl1-mesa-dev \
     libglew-dev \
     git-lfs \
@@ -79,6 +78,13 @@ RUN wget https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz \
     && cp -r man /usr/share/ \
     && cd .. \
     && rm -rf cmake*
+    
+RUN wget https://www.doxygen.nl/files/doxygen-1.9.5.linux.bin.tar.gz \
+    && tar xvf doxygen-1.9.5.linux.bin.tar.gz \
+    && cd doxygen-1.9.5 \
+    && cp -r bin /usr/ \
+    && cd .. \
+    && rm -rf doxygen*
 
 RUN wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.16.orig.tar.xz \
     && tar xvf lcov_1.16.orig.tar.xz \
